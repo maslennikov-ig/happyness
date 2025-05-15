@@ -1,0 +1,56 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Базовая модель пользователя
+model User {
+  id             String   @id @default(uuid())
+  email          String   @unique
+  passwordHash   String
+  firstName      String
+  lastName       String
+  role           String   // "Предприниматель", "Сотрудник", "Консьерж", "Администратор"
+  companyId      String?  // Nullable для ролей Консьерж и Администратор
+  phone          String?
+  isEmailVerified Boolean @default(false)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  lastLoginAt    DateTime?
+
+  // Дополнительные поля для восстановления пароля
+  resetPasswordToken      String?
+  resetPasswordExpires    DateTime?
+
+  // Отношения будут добавлены позже
+  @@map("users")
+}
+
+// Базовая модель компании
+model Company {
+  id            String   @id @default(uuid())
+  name          String
+  inn           String?
+  description   String?
+  address       String?
+  ownerId       String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Поля для управления подпиской
+  tariffPlanId       String?
+  subscriptionId     String? // ID подписки во внешнем платежном сервисе
+  subscriptionStatus String? // "active", "canceled", "past_due"
+  subscriptionEndDate DateTime?
+
+  // Отношения будут добавлены позже
+  @@map("companies")
+}
