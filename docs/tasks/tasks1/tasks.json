@@ -1,0 +1,223 @@
+{
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Project Repository Setup",
+      "description": "Set up the project repository with initial structure, build tools, and dependency management.",
+      "details": "Initialize a Git repository. Configure build tools (e.g., Webpack, Babel for frontend; tsc for backend). Set up package managers (npm/yarn). Define initial project structure for frontend (TypeScript, React, Next.js) and backend (TypeScript, Node.js, NestJS).",
+      "testStrategy": "Verify that the repository is created, build tools are configured correctly, and dependencies can be installed.",
+      "priority": "high",
+      "dependencies": [],
+      "status": "in-progress",
+      "subtasks": []
+    },
+    {
+      "id": 2,
+      "title": "Backend Core Infrastructure Setup",
+      "description": "Set up the core backend infrastructure using Node.js and NestJS.",
+      "details": "Initialize a NestJS project. Configure basic server setup, including middleware for request parsing and error handling. Set up logging and monitoring frameworks.",
+      "testStrategy": "Ensure the backend server starts without errors and basic endpoints are accessible.",
+      "priority": "high",
+      "dependencies": [
+        1
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 3,
+      "title": "Frontend Core Infrastructure Setup",
+      "description": "Set up the core frontend infrastructure using TypeScript, React, and Next.js.",
+      "details": "Initialize a Next.js project with TypeScript. Configure basic routing and project structure. Integrate Tailwind CSS for styling and shadcn/ui for UI components.",
+      "testStrategy": "Verify that the frontend application builds and runs, and basic pages are rendered correctly with the chosen UI library.",
+      "priority": "high",
+      "dependencies": [
+        1
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 4,
+      "title": "Database Schema Implementation",
+      "description": "Implement the database schema for core entities using Prisma and PostgreSQL.",
+      "details": "Define Prisma schema for User, Company, Request, RequestFile, Contractor, DocumentTemplate, TariffPlan, Payment, Notification, ChatMessage, and AuditLog entities. Apply migrations to create tables in the PostgreSQL database.",
+      "testStrategy": "Verify that the database tables are created with the correct schema and relationships.",
+      "priority": "high",
+      "dependencies": [
+        2
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 5,
+      "title": "Entrepreneur Registration",
+      "description": "Implement the basic user registration functionality for Entrepreneurs.",
+      "details": "Create backend API endpoint for user registration. Implement logic to create a new User and Company entry in the database. Use bcrypt/Argon2id for password hashing. Implement frontend form using React Hook Form with Zod for validation.",
+      "testStrategy": "Test successful registration with valid data and verify user and company entries in the database. Test with invalid data to ensure proper error handling.",
+      "priority": "high",
+      "dependencies": [
+        2,
+        4
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 6,
+      "title": "User Authentication",
+      "description": "Implement user authentication using JWT and Passport.js.",
+      "details": "Implement backend API endpoints for login. Generate and verify JWT tokens using Passport.js. Implement frontend login form and handle token storage (e.g., in cookies or local storage).",
+      "testStrategy": "Test successful login with valid credentials and verify token generation. Test with invalid credentials to ensure authentication failure.",
+      "priority": "high",
+      "dependencies": [
+        2,
+        4,
+        5
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 7,
+      "title": "Role-Based Access Control",
+      "description": "Implement role-based access control (RBAC) for different user roles.",
+      "details": "Define roles (Предприниматель, Сотрудник Компании Клиента, Консьерж-менеджер, Администратор Платформы). Implement middleware or guards in NestJS to protect routes based on user roles. Store user roles in the database.",
+      "testStrategy": "Verify that users with different roles can only access authorized resources and are denied access to unauthorized resources.",
+      "priority": "high",
+      "dependencies": [
+        2,
+        4,
+        6
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 8,
+      "title": "User and Company Profile Management",
+      "description": "Implement user and company profile management.",
+      "details": "Create backend API endpoints to view and update user and company profiles. Implement frontend forms for profile editing. Ensure only authorized users can update profiles.",
+      "testStrategy": "Test viewing and updating profiles for different user roles. Verify data consistency in the database.",
+      "priority": "medium",
+      "dependencies": [
+        2,
+        4,
+        6,
+        7
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 9,
+      "title": "Employee Management",
+      "description": "Implement the ability for Entrepreneurs to manage their company's employees.",
+      "details": "Create backend API endpoints for inviting, adding, and managing employees associated with a company. Implement frontend interface for Entrepreneurs to manage employees. Ensure proper authorization.",
+      "testStrategy": "Test inviting and adding employees as an Entrepreneur. Verify that employees are associated with the correct company and have appropriate roles.",
+      "priority": "medium",
+      "dependencies": [
+        2,
+        4,
+        7,
+        8
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 10,
+      "title": "Request Management (Client Side)",
+      "description": "Implement the core functionality for creating and managing requests.",
+      "details": "Create backend API endpoints for creating new requests and viewing existing requests for a user/company. Implement frontend interface for users to create requests and view their request list with statuses.",
+      "testStrategy": "Test creating new requests with different data. Verify that requests are saved in the database and displayed correctly in the user's request list.",
+      "priority": "high",
+      "dependencies": [
+        2,
+        4,
+        6,
+        7,
+        8
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 11,
+      "title": "Request Management (Concierge Side)",
+      "description": "Implement the interface for Concierge Managers to manage client requests.",
+      "details": "Create backend API endpoints for Concierge Managers to view, update status, and assign requests. Implement frontend interface for Concierge Managers to manage the request queue.",
+      "testStrategy": "Test viewing, updating status, and assigning requests as a Concierge Manager. Verify that changes are reflected in the database and visible to the client.",
+      "priority": "high",
+      "dependencies": [
+        2,
+        4,
+        7,
+        10
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 12,
+      "title": "Request Chat System",
+      "description": "Implement the internal chat system for communication related to requests.",
+      "details": "Implement backend API endpoints for sending and receiving chat messages associated with a request. Use WebSockets or a similar technology for real-time communication. Implement frontend chat interface within the request details view.",
+      "testStrategy": "Test sending and receiving messages between clients and Concierge Managers within a request. Verify that messages are stored and displayed correctly.",
+      "priority": "high",
+      "dependencies": [
+        2,
+        4,
+        10,
+        11
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 13,
+      "title": "Tariff and Subscription Management",
+      "description": "Implement the module for managing tariff plans and subscriptions.",
+      "details": "Create backend API endpoints for defining tariff plans and managing user subscriptions. Implement database schema for TariffPlan and user subscriptions. Implement frontend interface for viewing tariff plans and managing subscriptions.",
+      "testStrategy": "Test creating and managing tariff plans as an administrator. Test subscribing and managing subscriptions as a user. Verify data consistency in the database.",
+      "priority": "medium",
+      "dependencies": [
+        2,
+        4,
+        7
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 14,
+      "title": "Payment Module Integration",
+      "description": "Implement the payment module with integration for processing payments.",
+      "details": "Integrate with a payment gateway (details not specified, assume a placeholder integration for now). Implement backend API endpoints for initiating and processing payments for subscriptions and one-time services. Implement frontend payment flow.",
+      "testStrategy": "Test initiating and processing payments through the integrated gateway (using test credentials). Verify that payment records are created in the database and linked to users/subscriptions.",
+      "priority": "high",
+      "dependencies": [
+        2,
+        4,
+        13
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 15,
+      "title": "Notification System",
+      "description": "Implement the system for sending and managing notifications.",
+      "details": "Implement backend service for generating and sending notifications (in-app and email). Use Nodemailer with SendGrid/Mailgun for email sending and React-email for email templates. Implement database schema for notifications. Implement frontend interface for viewing in-app notifications.",
+      "testStrategy": "Test sending different types of notifications (e.g., new request, status update). Verify that notifications are sent via email and appear in the in-app notification list.",
+      "priority": "medium",
+      "dependencies": [
+        2,
+        4
+      ],
+      "status": "pending",
+      "subtasks": []
+    }
+  ]
+}
