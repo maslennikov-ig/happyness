@@ -46,37 +46,31 @@ services:
 
   # База данных PostgreSQL
   postgres:
-    image: postgres:17.5
     container_name: happyness-postgres
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
-      - ./docker/postgres/postgresql.conf:/etc/postgresql/postgresql.conf
-      - ./docker/postgres/backup.sh:/usr/local/bin/backup.sh
-      - ./docker/postgres/restore.sh:/usr/local/bin/restore.sh
-      - postgres_backups:/backups
+    image: postgres:17.5
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: happyness
     ports:
       - "5432:5432"
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=happyness
-    command: postgres -c config_file=/etc/postgresql/postgresql.conf
-    restart: unless-stopped
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - happyness-network
 
   # Redis для кэширования
   redis:
-    image: redis:8.0.1
     container_name: happyness-redis
-    volumes:
-      - redis_data:/data
-      - ./docker/redis/redis.conf:/usr/local/etc/redis/redis.conf
+    image: redis:8.0.1
     ports:
       - "6379:6379"
-    command: redis-server /usr/local/etc/redis/redis.conf
-    restart: unless-stopped
+    networks:
+      - happyness-network
+
+networks:
+  happyness-network:
+    driver: bridge
 
 volumes:
-  postgres_data:
-  postgres_backups:
-  redis_data: 
+  postgres_data: 

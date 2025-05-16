@@ -1,0 +1,116 @@
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { UsersService } from '../users/users.service';
+import * as bcrypt from 'bcrypt';
+import { User } from '@prisma/client';
+import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
+
+@Injectable()
+export class AuthService {
+  constructor(
+    private usersService: UsersService,
+    private jwtService: JwtService,
+  ) {}
+
+  /**
+   * Валидация пользователя для локальной стратегии
+   */
+  async validateUser(email: string, password: string): Promise<any> {
+    const user = await this.usersService.findByEmail(email);
+    
+    if (user && await this.comparePasswords(password, user.password)) {
+      const { password, ...result } = user;
+      return result;
+    }
+    
+    return null;
+  }
+
+  /**
+   * Вход пользователя
+   */
+  async login(loginDto: LoginDto) {
+    const user = await this.validateUser(loginDto.email, loginDto.password);
+    
+    if (!user) {
+      throw new UnauthorizedException('Неверный email или пароль');
+    }
+    
+    return {
+      user,
+      token: this.generateToken(user),
+    };
+  }
+
+  /**
+   * Регистрация нового пользователя
+   */
+  async register(registerDto: RegisterDto) {
+    // Проверка, существует ли пользователь с таким email
+    const existingUser = await this.usersService.findByEmail(registerDto.email);
+    
+    if (existingUser) {
+      throw new UnauthorizedException('Пользователь с таким email уже существует');
+    }
+    
+    // Хеширование пароля
+    const hashedPassword = await this.hashPassword(registerDto.password);
+    
+    // Создание пользователя
+    const newUser = await this.usersService.create({
+      ...registerDto,
+      password: hashedPassword,
+    });
+    
+    // Исключаем пароль из ответа
+    const { password, ...user } = newUser;
+    
+    return {
+      user,
+      token: this.generateToken(user),
+    };
+  }
+
+  /**
+   * Получение текущего пользователя по токену
+   */
+  async getMe(userId: string) {
+    const user = await this.usersService.findById(userId);
+    
+    if (!user) {
+      throw new UnauthorizedException('Пользователь не найден');
+    }
+    
+    const { password, ...result } = user;
+    return result;
+  }
+
+  /**
+   * Генерация JWT токена
+   */
+  private generateToken(user: Partial<User>) {
+    const payload = { 
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+    };
+    
+    return this.jwtService.sign(payload);
+  }
+
+  /**
+   * Хеширование пароля
+   */
+  private async hashPassword(password: string): Promise<string> {
+    const saltRounds = 10;
+    return bcrypt.hash(password, saltRounds);
+  }
+
+  /**
+   * Сравнение паролей
+   */
+  private async comparePasswords(plainPassword: string, hashedPassword: string): Promise<boolean> {
+    return bcrypt.compare(plainPassword, hashedPassword);
+  }
+} 

@@ -1,6 +1,6 @@
-# Happyness - Платформа для Предпринимателей
+# Happyness
 
-## О проекте
+Платформа для предпринимателей, которая помогает находить проверенных подрядчиков и управлять проектами.
 
 Happyness - это модульная платформа для предпринимателей малого и среднего бизнеса, которая помогает эффективно управлять бизнесом, снижать стресс, экономить время и ресурсы, и создавать условия для личного благополучия и благополучия команды.
 
@@ -26,123 +26,134 @@ Happyness - это модульная платформа для предприн
 - React ^19.1.0
 - TypeScript ^5.5.4
 - Vitest ^3.2.0
+- Tailwind CSS
+- Shadcn UI
 
 ### Backend
-- NestJS 11.1.1
-- TypeScript ^5.5.4
+- Node.js
+- Express.js
+- TypeScript
 - Prisma ORM
 - Vitest ^3.2.0
-
-### Базы данных
+- PostgreSQL
+- Redis
 - PostgreSQL 17.5
 - Redis 8.0.1
+## Структура проекта
 
-### Инфраструктура
-- Docker
-- Docker Compose
+```
+Happyness/
+├── config/              # Конфигурация приложения
+├── docker/              # Docker конфигурация
+│   ├── postgres/        # Настройки PostgreSQL
+│   └── redis/           # Настройки Redis
+├── docs/                # Документация
+│   ├── database/        # Схемы базы данных
+│   ├── sprints/         # Информация о спринтах
+│   └── tasks/           # Задачи проекта
+├── prisma/              # Схемы Prisma и миграции
+├── src/                 # Исходный код
+│   ├── backend/         # Код бэкенда
+│   │   ├── controllers/ # Контроллеры API
+│   │   ├── core/        # Основные модули
+│   │   ├── middlewares/ # Промежуточное ПО
+│   │   ├── routes/      # Маршруты API
+│   │   ├── services/    # Бизнес-логика
+│   │   ├── test/        # Тесты
+│   │   └── types/       # Типы и интерфейсы
+│   ├── config/          # Общая конфигурация
+│   └── frontend/        # Код фронтенда (Next.js)
+│       ├── app/         # Компоненты страниц (App Router)
+│       ├── components/  # Компоненты UI
+│       ├── hooks/       # React хуки
+│       ├── lib/         # Утилиты и библиотеки
+│       ├── styles/      # Стили
+│       ├── test/        # Тесты
+│       └── types/       # Типы и интерфейсы
+```
 
 ## Запуск проекта
 
-### Требования
-- Node.js ^22.15.1
-- npm ^10.9.2
-- Docker и Docker Compose
-- PostgreSQL 17.5
-- Redis 8.0.1
+### Предварительные требования
 
-### Установка и запуск
+- Node.js 18+
+- Docker и Docker Compose (для локальной разработки с PostgreSQL и Redis)
 
-1. Клонировать репозиторий
+### Установка зависимостей
+
 ```bash
-git clone https://github.com/yourusername/happyness.git
-cd happyness
+npm install
 ```
 
-2. Создать файл .env на основе .env.example
+### Настройка окружения
+
+1. Скопируйте файл `.env.example` в `.env`:
+
 ```bash
 cp .env.example .env
 ```
 
-3. Запустить с использованием Docker
+2. Отредактируйте файл `.env` в соответствии с вашими настройками.
+
+### Запуск базы данных
+
 ```bash
 docker-compose up -d
 ```
 
-4. Или запустить локально
-```bash
-# Установка зависимостей
-npm install
+### Миграции базы данных
 
-# Запуск frontend
-cd src/frontend
+```bash
+npx prisma migrate dev
+```
+
+### Запуск в режиме разработки
+
+```bash
+# Запуск бэкенда и фронтенда одновременно
 npm run dev
 
-# Запуск backend
-cd src/backend
-npm run start:dev
+# Запуск только фронтенда
+npm run dev:frontend
+
+# Запуск только бэкенда
+npm run dev:backend
+```
+
+### Сборка для продакшена
+
+```bash
+npm run build
+```
+
+### Запуск в продакшене
+
+```bash
+npm start
 ```
 
 ## Тестирование
 
-Проект использует Vitest для модульного и интеграционного тестирования.
-
-### Запуск тестов frontend
-
 ```bash
-cd src/frontend
-npm run test          # Запуск всех тестов
-npm run test:watch    # Запуск тестов в режиме наблюдения
-npm run test:coverage # Запуск тестов с отчетом о покрытии
+# Запуск всех тестов
+npm test
+
+# Запуск тестов фронтенда
+npm run test:frontend
+
+# Запуск тестов бэкенда
+npm run test:backend
 ```
 
-### Запуск тестов backend
+## Основные функции
 
-```bash
-cd src/backend
-npm run test          # Запуск модульных тестов
-npm run test:watch    # Запуск тестов в режиме наблюдения
-npm run test:coverage # Запуск тестов с отчетом о покрытии
-npm run test:e2e      # Запуск E2E тестов
-```
-
-## Документация
-
-Подробная документация по проекту доступна в директории `docs/`:
-
-- **[Архитектура системы](docs/architecture.md)** - полная документация по архитектуре приложения
-- **[Спринты](docs/sprints/)** - документация по спринтам разработки
-- **[База данных](docs/database/)** - документация по структуре базы данных
-
-## Структура проекта
-
-```
-happyness/
-├── config/           # Конфигурационные файлы
-├── docker/           # Docker-конфигурация
-│   ├── postgres/     # Конфигурация PostgreSQL
-│   └── redis/        # Конфигурация Redis
-├── docs/             # Документация
-├── prisma/           # Prisma схемы и миграции
-└── src/              # Исходный код
-    ├── backend/      # Backend на NestJS
-    │   └── test/     # Тесты backend
-    ├── config/       # Общие конфигурации
-    └── frontend/     # Frontend на Next.js
-        └── test/     # Тесты frontend
-```
-
-## Вклад в проект
-
-1. Форкните репозиторий
-2. Создайте ветку для вашей функциональности (`git checkout -b feature/amazing-feature`)
-3. Зафиксируйте изменения (`git commit -m 'Add some amazing feature'`)
-4. Отправьте изменения в ветку (`git push origin feature/amazing-feature`)
-5. Откройте Pull Request
+- Регистрация и аутентификация пользователей
+- Создание и управление проектами
+- Размещение запросов на услуги
+- Поиск и фильтрация подрядчиков
+- Система рейтингов и отзывов
+- Управление профилем пользователя
 
 ## Лицензия
 
-Этот проект лицензирован под [MIT License](LICENSE).
-
-## Контакты
-
-Email: example@example.com
+MIT

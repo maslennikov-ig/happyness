@@ -13,6 +13,10 @@ process.env.DATABASE_URL = `postgresql://postgres:postgres@localhost:5432/${dbNa
 // Инициализация Prisma клиента для тестов
 const prisma = new PrismaClient();
 
+// Глобальные переменные для тестов
+let testApp;
+let testDb;
+
 // Функция для настройки тестовой базы данных
 async function setupDatabase() {
   try {
@@ -40,12 +44,16 @@ async function teardownDatabase() {
   }
 }
 
-// Запускаем настройку перед всеми тестами
+// Настройка перед всеми тестами
 beforeAll(async () => {
   await setupDatabase();
+  // Здесь можно добавить код для настройки тестовой базы данных
+  // и запуска тестового приложения
 });
 
-// Очищаем после всех тестов
+// Очистка после всех тестов
 afterAll(async () => {
   await teardownDatabase();
+  // Здесь можно добавить код для очистки тестовой базы данных
+  // и остановки тестового приложения
 }); 
