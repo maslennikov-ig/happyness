@@ -1,9 +1,11 @@
 # Frontend (Next.js)
 
 Этот каталог содержит код фронтенда для платформы Happyness, который разработан с использованием следующего технологического стека:
-- TypeScript 5.8.2+
+- TypeScript 5.5.4+
 - React 19.1.0+
 - Next.js 15.3.2+
+- Vitest 3.2.0+ (для тестирования)
+- ESLint 9.7.0+ (для линтинга)
 - Tailwind CSS 4.1.5+
 - shadcn/ui (последние компоненты)
 - React Hook Form 7.56.3+
@@ -27,6 +29,16 @@ frontend/
 ├── store/             # Глобальное состояние (Zustand, Jotai)
 ├── types/             # TypeScript типы и интерфейсы
 └── styles/            # Глобальные стили (globals.css)
+```
+
+## Установка и запуск
+
+```bash
+npm install   # Установка зависимостей
+npm run dev   # Запуск dev сервера
+npm run build # Сборка проекта
+npm start     # Запуск production сборки
+npm test      # Запуск тестов
 ```
 
 Базовая структура будет создана в рамках следующих задач спринта.

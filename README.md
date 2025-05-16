@@ -16,42 +16,133 @@ Happyness - это модульная платформа для предприн
 - **База проверенных подрядчиков:** Доступ к надежным исполнителям
 - **Библиотека шаблонов:** Готовые шаблоны документов и инструкций
 - **Коммуникации:** Внутренний чат для общения по запросам
-- **Аналитика:** Информационные панели и отчеты для анализа бизнеса
-- **Управление командой:** Возможность приглашения сотрудников и делегирования задач
+- **Аналитика и отчеты:** Мониторинг эффективности использования сервиса
+- **Интеграции:** Возможность подключения к популярным бизнес-инструментам
 
-## Технологический стек
+## Технический стек
 
-- **Frontend:** TypeScript, React, Next.js, Tailwind CSS, shadcn/ui
-- **Backend:** TypeScript, Node.js, NestJS, Prisma
-- **База данных:** PostgreSQL
-- **Кэширование:** Redis
-- **Хранение файлов:** Amazon S3 / Yandex Object Storage (или аналог)
+### Frontend
+- Next.js ^15.3.2
+- React ^19.1.0
+- TypeScript ^5.5.4
+- Vitest ^3.2.0
+
+### Backend
+- NestJS 11.1.1
+- TypeScript ^5.5.4
+- Prisma ORM
+- Vitest ^3.2.0
+
+### Базы данных
+- PostgreSQL 17.5
+- Redis 8.0.1
+
+### Инфраструктура
+- Docker
+- Docker Compose
+
+## Запуск проекта
+
+### Требования
+- Node.js ^22.15.1
+- npm ^10.9.2
+- Docker и Docker Compose
+- PostgreSQL 17.5
+- Redis 8.0.1
+
+### Установка и запуск
+
+1. Клонировать репозиторий
+```bash
+git clone https://github.com/yourusername/happyness.git
+cd happyness
+```
+
+2. Создать файл .env на основе .env.example
+```bash
+cp .env.example .env
+```
+
+3. Запустить с использованием Docker
+```bash
+docker-compose up -d
+```
+
+4. Или запустить локально
+```bash
+# Установка зависимостей
+npm install
+
+# Запуск frontend
+cd src/frontend
+npm run dev
+
+# Запуск backend
+cd src/backend
+npm run start:dev
+```
+
+## Тестирование
+
+Проект использует Vitest для модульного и интеграционного тестирования.
+
+### Запуск тестов frontend
+
+```bash
+cd src/frontend
+npm run test          # Запуск всех тестов
+npm run test:watch    # Запуск тестов в режиме наблюдения
+npm run test:coverage # Запуск тестов с отчетом о покрытии
+```
+
+### Запуск тестов backend
+
+```bash
+cd src/backend
+npm run test          # Запуск модульных тестов
+npm run test:watch    # Запуск тестов в режиме наблюдения
+npm run test:coverage # Запуск тестов с отчетом о покрытии
+npm run test:e2e      # Запуск E2E тестов
+```
+
+## Документация
+
+Подробная документация по проекту доступна в директории `docs/`:
+
+- **[Архитектура системы](docs/architecture.md)** - полная документация по архитектуре приложения
+- **[Спринты](docs/sprints/)** - документация по спринтам разработки
+- **[База данных](docs/database/)** - документация по структуре базы данных
 
 ## Структура проекта
 
 ```
-/
-├── src/                      # Исходный код
-│   ├── frontend/             # Frontend код (Next.js)
-│   └── backend/              # Backend код (NestJS)
-├── prisma/                   # Prisma схема и миграции
-├── docs/                     # Документация проекта, задач и спринтов
+happyness/
+├── config/           # Конфигурационные файлы
+├── docker/           # Docker-конфигурация
+│   ├── postgres/     # Конфигурация PostgreSQL
+│   └── redis/        # Конфигурация Redis
+├── docs/             # Документация
+├── prisma/           # Prisma схемы и миграции
+└── src/              # Исходный код
+    ├── backend/      # Backend на NestJS
+    │   └── test/     # Тесты backend
+    ├── config/       # Общие конфигурации
+    └── frontend/     # Frontend на Next.js
+        └── test/     # Тесты frontend
 ```
 
-## Начало работы
+## Вклад в проект
 
-Детальные инструкции по настройке среды разработки будут добавлены в ближайшее время.
-
-## Требования к среде
-
-- Node.js 22.x LTS
-- PostgreSQL 17.5+
-- Redis 7+
-
-## Команда проекта
-
-Проект разрабатывается силами команды Happyness с поддержкой ИИ-ассистентов.
+1. Форкните репозиторий
+2. Создайте ветку для вашей функциональности (`git checkout -b feature/amazing-feature`)
+3. Зафиксируйте изменения (`git commit -m 'Add some amazing feature'`)
+4. Отправьте изменения в ветку (`git push origin feature/amazing-feature`)
+5. Откройте Pull Request
 
 ## Лицензия
 
-Все права защищены © Happyness, 2025
+Этот проект лицензирован под [MIT License](LICENSE).
+
+## Контакты
+
+Email: example@example.com

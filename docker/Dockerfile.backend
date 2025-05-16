@@ -1,0 +1,28 @@
+FROM node:22-alpine
+
+# Установка рабочей директории
+WORKDIR /app
+
+# Установка глобальных зависимостей
+RUN npm install -g npm@latest @nestjs/cli
+
+# Установка дополнительных зависимостей для работы с базами данных
+RUN apk add --no-cache python3 make g++ postgresql-client
+
+# Копирование файлов package.json и package-lock.json
+COPY package*.json ./
+
+# Установка зависимостей
+RUN npm ci
+
+# Копирование исходного кода
+COPY . .
+
+# Генерация Prisma клиента
+RUN npx prisma generate
+
+# Экспорт порта для NestJS API
+EXPOSE 4000
+
+# Команда для запуска NestJS в режиме разработки
+CMD ["npm", "run", "start:dev"] 
