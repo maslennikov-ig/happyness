@@ -104,6 +104,9 @@ describe('AuthController', () => {
 
       mockAuthService.login.mockResolvedValue(mockResponse);
 
+      // Создаем мок req.user для имитации работы LocalAuthGuard
+      const req = { user: { id: '1', email: loginDto.email } };
+
       // Вызов тестируемого метода
       const result = await controller.login(loginDto);
 
