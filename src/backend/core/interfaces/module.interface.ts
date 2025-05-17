@@ -59,3 +59,19 @@ export interface IModule {
     status: 'initialized' | 'running' | 'stopped' | 'error';
   };
 }
+
+/**
+ * Результат валидации модуля
+ * Содержит информацию о результате проверки модуля на соответствие требованиям
+ */
+export interface ModuleValidationResult {
+  /**
+   * Признак успешной валидации
+   */
+  isValid: boolean;
+
+  /**
+   * Список ошибок валидации
+   */
+  errors: string[];
+}
