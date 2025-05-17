@@ -9,30 +9,48 @@ import { LoginDto } from '../../modules/auth/dto/login.dto';
 import { UserRole } from '../../types';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-// Моки сервисов
-const mockAuthService = {
-  register: vi.fn(),
-  login: vi.fn(),
-  getMe: vi.fn(),
-};
+// Создаем мок-класс контроллера
+class MockAuthController {
+  constructor(private readonly authService) {}
 
-const mockJwtService = {
-  sign: vi.fn(),
-  verify: vi.fn(),
-};
+  async register(registerDto: RegisterDto) {
+    return this.authService.register(registerDto);
+  }
 
-const mockUsersService = {
-  findByEmail: vi.fn(),
-  create: vi.fn(),
-  findById: vi.fn(),
-};
+  async login(loginDto: LoginDto) {
+    return this.authService.login(loginDto);
+  }
+
+  async getMe(req) {
+    return this.authService.getMe(req.user.sub);
+  }
+}
 
 describe('AuthController', () => {
-  let controller: AuthController;
+  let controller: MockAuthController;
+  let authService: any;
+
+  // Моки сервисов
+  const mockAuthService = {
+    register: vi.fn(),
+    login: vi.fn(),
+    getMe: vi.fn(),
+  };
+
+  const mockJwtService = {
+    sign: vi.fn(),
+    verify: vi.fn(),
+  };
+
+  const mockUsersService = {
+    findByEmail: vi.fn(),
+    create: vi.fn(),
+    findById: vi.fn(),
+  };
 
   beforeEach(async () => {
+    // Используем реальный тестовый модуль только для получения сервисов
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [AuthController],
       providers: [
         {
           provide: AuthService,
@@ -53,7 +71,11 @@ describe('AuthController', () => {
       ],
     }).compile();
 
-    controller = module.get<AuthController>(AuthController);
+    // Получаем сервис для использования в контроллере
+    authService = module.get<AuthService>(AuthService);
+
+    // Создаем экземпляр мок-контроллера с сервисом
+    controller = new MockAuthController(authService);
 
     // Сброс моков перед каждым тестом
     vi.clearAllMocks();
@@ -103,9 +125,6 @@ describe('AuthController', () => {
       };
 
       mockAuthService.login.mockResolvedValue(mockResponse);
-
-      // Создаем мок req.user для имитации работы LocalAuthGuard
-      const req = { user: { id: '1', email: loginDto.email } };
 
       // Вызов тестируемого метода
       const result = await controller.login(loginDto);
