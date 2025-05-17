@@ -9,11 +9,9 @@ export default defineConfig({
     setupFiles: ['./src/frontend/test/setup.ts'],
     include: ['src/frontend/**/*.{test,spec}.{js,jsx,ts,tsx}'],
     coverage: {
+      provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      exclude: [
-        'node_modules/',
-        'src/frontend/test/',
-      ],
+      exclude: ['node_modules/', 'src/frontend/test/'],
     },
   },
-}); 
+});

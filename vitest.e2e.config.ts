@@ -7,11 +7,9 @@ export default defineConfig({
     setupFiles: ['./src/backend/test/setup-e2e.ts'],
     include: ['src/backend/**/*.e2e-spec.ts'],
     coverage: {
+      provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      exclude: [
-        'node_modules/',
-        'src/backend/test/',
-      ],
+      exclude: ['node_modules/', 'src/backend/test/'],
     },
   },
-}); 
+});

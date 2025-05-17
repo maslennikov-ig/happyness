@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
-import { User, Prisma } from '@prisma/client';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { User } from '@/backend/types';
 
 @Injectable()
 export class UsersService {
@@ -10,7 +10,7 @@ export class UsersService {
   /**
    * Создание нового пользователя
    */
-  async create(data: Prisma.UserCreateInput): Promise<User> {
+  async create(data: any): Promise<User> {
     return this.prisma.user.create({
       data,
     });
@@ -44,14 +44,14 @@ export class UsersService {
   /**
    * Обновление данных пользователя
    */
-  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+  async update(id: string, updateUserDto: any): Promise<User> {
     try {
       return await this.prisma.user.update({
         where: { id },
         data: updateUserDto,
       });
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+      if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
         throw new NotFoundException(`Пользователь с ID ${id} не найден`);
       }
       throw error;
@@ -67,10 +67,10 @@ export class UsersService {
         where: { id },
       });
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+      if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
         throw new NotFoundException(`Пользователь с ID ${id} не найден`);
       }
       throw error;
     }
   }
-} 
+}

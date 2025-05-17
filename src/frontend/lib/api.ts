@@ -29,7 +29,7 @@ async function fetchApi<T>(
 
   // Добавляем токен авторизации, если он есть
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-  const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+  const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
 
   // Формируем URL с параметрами запроса
   const url = new URL(`${API_URL}${endpoint}`);
@@ -76,40 +76,28 @@ export const api = {
       fetchApi('/auth/register', 'POST', { body: { email, password, name } }),
     me: () => fetchApi('/auth/me'),
   },
-  
+
   // Проекты
   projects: {
-    getAll: (params?: Record<string, string>) =>
-      fetchApi('/projects', 'GET', { params }),
-    getById: (id: string) =>
-      fetchApi(`/projects/${id}`),
-    create: (data: any) =>
-      fetchApi('/projects', 'POST', { body: data }),
-    update: (id: string, data: any) =>
-      fetchApi(`/projects/${id}`, 'PUT', { body: data }),
-    delete: (id: string) =>
-      fetchApi(`/projects/${id}`, 'DELETE'),
+    getAll: (params?: Record<string, string>) => fetchApi('/projects', 'GET', { params }),
+    getById: (id: string) => fetchApi(`/projects/${id}`),
+    create: (data: any) => fetchApi('/projects', 'POST', { body: data }),
+    update: (id: string, data: any) => fetchApi(`/projects/${id}`, 'PUT', { body: data }),
+    delete: (id: string) => fetchApi(`/projects/${id}`, 'DELETE'),
   },
-  
+
   // Запросы
   requests: {
-    getAll: (params?: Record<string, string>) =>
-      fetchApi('/requests', 'GET', { params }),
-    getById: (id: string) =>
-      fetchApi(`/requests/${id}`),
-    create: (data: any) =>
-      fetchApi('/requests', 'POST', { body: data }),
-    update: (id: string, data: any) =>
-      fetchApi(`/requests/${id}`, 'PUT', { body: data }),
-    delete: (id: string) =>
-      fetchApi(`/requests/${id}`, 'DELETE'),
+    getAll: (params?: Record<string, string>) => fetchApi('/requests', 'GET', { params }),
+    getById: (id: string) => fetchApi(`/requests/${id}`),
+    create: (data: any) => fetchApi('/requests', 'POST', { body: data }),
+    update: (id: string, data: any) => fetchApi(`/requests/${id}`, 'PUT', { body: data }),
+    delete: (id: string) => fetchApi(`/requests/${id}`, 'DELETE'),
   },
-  
+
   // Подрядчики
   contractors: {
-    getAll: (params?: Record<string, string>) =>
-      fetchApi('/contractors', 'GET', { params }),
-    getById: (id: string) =>
-      fetchApi(`/contractors/${id}`),
+    getAll: (params?: Record<string, string>) => fetchApi('/contractors', 'GET', { params }),
+    getById: (id: string) => fetchApi(`/contractors/${id}`),
   },
-}; 
+};

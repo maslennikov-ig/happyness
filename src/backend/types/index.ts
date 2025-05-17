@@ -1,4 +1,76 @@
-import { User, Contractor, Project, Request, UserRole, ProjectStatus, RequestStatus } from '@prisma/client';
+// Определяем типы на основе схемы Prisma вместо импорта
+// import { User, Contractor, Project, Request, UserRole, ProjectStatus, RequestStatus } from '@prisma/client';
+
+// Определение собственных типов на основе схемы Prisma
+export interface User {
+  id: string;
+  email: string;
+  name?: string | null;
+  password: string;
+  role: UserRole;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export enum UserRole {
+  ADMIN = 'ADMIN',
+  ENTREPRENEUR = 'ENTREPRENEUR',
+  CONTRACTOR = 'CONTRACTOR',
+}
+
+export interface Contractor {
+  id: string;
+  userId: string;
+  companyName?: string | null;
+  description?: string | null;
+  services: string[];
+  rating: number;
+  verified: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Project {
+  id: string;
+  title: string;
+  description?: string | null;
+  status: ProjectStatus;
+  budget?: number | null;
+  startDate?: Date | null;
+  endDate?: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  ownerId: string;
+  contractorId?: string | null;
+}
+
+export enum ProjectStatus {
+  PLANNING = 'PLANNING',
+  IN_PROGRESS = 'IN_PROGRESS',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
+}
+
+export interface Request {
+  id: string;
+  title: string;
+  description: string;
+  budget?: number | null;
+  deadline?: Date | null;
+  status: RequestStatus;
+  createdAt: Date;
+  updatedAt: Date;
+  ownerId: string;
+  projectId?: string | null;
+  contractorId?: string | null;
+}
+
+export enum RequestStatus {
+  OPEN = 'OPEN',
+  IN_PROGRESS = 'IN_PROGRESS',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
+}
 
 // Типы для аутентификации
 export interface AuthResponse {
@@ -88,4 +160,4 @@ export interface PaginatedResponse<T> {
   page: number;
   limit: number;
   totalPages: number;
-} 
+}

@@ -13,20 +13,20 @@ process.env.DATABASE_URL = `postgresql://postgres:postgres@localhost:5432/${dbNa
 // Инициализация Prisma клиента для тестов
 const prisma = new PrismaClient();
 
-// Глобальные переменные для тестов
-let testApp;
-let testDb;
+// Глобальные переменные для тестов - закомментировано пока не используются
+// let testApp;
+// let testDb;
 
 // Функция для настройки тестовой базы данных
 async function setupDatabase() {
   try {
     // Создаем тестовую базу данных
     execSync(`createdb -h localhost -U postgres -p 5432 ${dbName}`);
-    
+
     // Применяем миграции
     execSync('npx prisma migrate deploy');
-    
-    console.log(`Test database created: ${dbName}`);
+
+    console.warn(`Test database created: ${dbName}`);
   } catch (error) {
     console.error('Error setting up test database:', error);
     process.exit(1);
@@ -38,7 +38,7 @@ async function teardownDatabase() {
   try {
     await prisma.$disconnect();
     execSync(`dropdb -h localhost -U postgres -p 5432 ${dbName}`);
-    console.log(`Test database dropped: ${dbName}`);
+    console.warn(`Test database dropped: ${dbName}`);
   } catch (error) {
     console.error('Error tearing down test database:', error);
   }
@@ -56,4 +56,4 @@ afterAll(async () => {
   await teardownDatabase();
   // Здесь можно добавить код для очистки тестовой базы данных
   // и остановки тестового приложения
-}); 
+});

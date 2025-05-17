@@ -7,11 +7,9 @@ export default defineConfig({
     setupFiles: ['./src/backend/test/setup.ts'],
     include: ['src/backend/**/*.{test,spec}.{js,ts}'],
     coverage: {
+      provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      exclude: [
-        'node_modules/',
-        'src/backend/test/',
-      ],
+      exclude: ['node_modules/', 'src/backend/test/'],
     },
   },
-}); 
+});

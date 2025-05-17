@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsEnum, IsOptional, IsString, MinLength } from 'class-validator';
-import { UserRole } from '@prisma/client';
+import { UserRole } from '@/backend/types';
 
 export class UpdateUserDto {
   @ApiProperty({
@@ -40,4 +40,4 @@ export class UpdateUserDto {
   @IsEnum(UserRole, { message: 'Недопустимая роль пользователя' })
   @IsOptional()
   role?: UserRole;
-} 
+}

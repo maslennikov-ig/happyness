@@ -15,14 +15,20 @@ COPY package*.json ./
 # Установка зависимостей
 RUN npm ci
 
+# Переустановка bcrypt, чтобы правильно скомпилировать нативные зависимости
+RUN npm uninstall bcrypt && npm install bcrypt
+
 # Копирование исходного кода
 COPY . .
 
-# Генерация Prisma клиента
-RUN npx prisma generate
+# Создаем директорию prisma, если она не существует
+RUN mkdir -p prisma
+
+# Генерация Prisma клиента только если схема существует
+RUN if [ -f prisma/schema.prisma ]; then npx prisma generate; else echo "Prisma schema not found, skipping generation"; fi
 
 # Экспорт порта для NestJS API
 EXPOSE 4000
 
-# Команда для запуска NestJS в режиме разработки
-CMD ["npm", "run", "start:dev"] 
+# Команда для запуска NestJS в режиме разработки (исправлено имя скрипта)
+CMD ["npm", "run", "start:backend:dev"] 

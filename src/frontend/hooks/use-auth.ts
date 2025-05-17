@@ -35,12 +35,12 @@ export function useAuth(): UseAuthReturn {
       try {
         // В реальном приложении здесь будет запрос к API
         const token = localStorage.getItem('token');
-        
+
         if (!token) {
           setState({ user: null, isAuthenticated: false, isLoading: false });
           return;
         }
-        
+
         // Заглушка для демонстрации
         // В реальном приложении здесь будет запрос к API для получения данных пользователя
         setState({
@@ -65,7 +65,7 @@ export function useAuth(): UseAuthReturn {
   // Функция для входа пользователя
   const login = async (email: string, password: string) => {
     setState(prev => ({ ...prev, isLoading: true }));
-    
+
     try {
       // В реальном приложении здесь будет запрос к API
       // Заглушка для демонстрации
@@ -75,7 +75,7 @@ export function useAuth(): UseAuthReturn {
         name: 'Демо пользователь',
         role: 'ENTREPRENEUR',
       };
-      
+
       localStorage.setItem('token', 'demo-token');
       setState({ user, isAuthenticated: true, isLoading: false });
     } catch (error) {
@@ -88,9 +88,12 @@ export function useAuth(): UseAuthReturn {
   // Функция для регистрации пользователя
   const register = async (email: string, password: string, name?: string) => {
     setState(prev => ({ ...prev, isLoading: true }));
-    
+
     try {
-      // В реальном приложении здесь будет запрос к API
+      // В реальном приложении здесь будет запрос к API для регистрации
+      // Здесь мы используем пароль для демонстрации (в реальном приложении он будет отправлен на сервер)
+      console.warn(`Регистрация пользователя с паролем длиной: ${password.length} символов`);
+
       // Заглушка для демонстрации
       const user = {
         id: '1',
@@ -98,7 +101,7 @@ export function useAuth(): UseAuthReturn {
         name: name || 'Новый пользователь',
         role: 'ENTREPRENEUR',
       };
-      
+
       localStorage.setItem('token', 'demo-token');
       setState({ user, isAuthenticated: true, isLoading: false });
     } catch (error) {
@@ -120,4 +123,4 @@ export function useAuth(): UseAuthReturn {
     register,
     logout,
   };
-} 
+}

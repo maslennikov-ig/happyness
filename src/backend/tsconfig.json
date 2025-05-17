@@ -1,5 +1,4 @@
 {
-  "extends": "../../tsconfig.json",
   "compilerOptions": {
     "module": "commonjs",
     "declaration": true,
@@ -7,10 +6,10 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
-    "target": "es2022",
+    "target": "es2017",
     "sourceMap": true,
-    "outDir": "../../dist/src/backend",
-    "baseUrl": "./",
+    "outDir": "./dist",
+    "baseUrl": ".",
     "incremental": true,
     "skipLibCheck": true,
     "strictNullChecks": false,
@@ -19,11 +18,11 @@
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
-      "@/*": ["../*"],
-      "@backend/*": ["./*"],
-      "@frontend/*": ["../frontend/*"]
+      "@/*": ["../src/*"],
+      "@/backend/*": ["./*"],
+      "@/config": ["../src/config"]
     }
   },
-  "include": ["**/*.ts"],
-  "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
-} 
+  "include": ["./**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

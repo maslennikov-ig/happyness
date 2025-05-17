@@ -17,6 +17,7 @@ export class UsersController {
   async findAll() {
     const users = await this.usersService.findAll();
     return users.map(user => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password, ...result } = user;
       return result;
     });
@@ -29,6 +30,7 @@ export class UsersController {
   async findOne(@Param('id') id: string) {
     const user = await this.usersService.findById(id);
     if (user) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password, ...result } = user;
       return result;
     }
@@ -41,6 +43,7 @@ export class UsersController {
   @Patch(':id')
   async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     const updatedUser = await this.usersService.update(id, updateUserDto);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...result } = updatedUser;
     return result;
   }
@@ -51,7 +54,8 @@ export class UsersController {
   @Delete(':id')
   async remove(@Param('id') id: string) {
     const deletedUser = await this.usersService.remove(id);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...result } = deletedUser;
     return result;
   }
-} 
+}

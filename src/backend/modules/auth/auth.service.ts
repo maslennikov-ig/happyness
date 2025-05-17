@@ -2,7 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcrypt';
-import { User } from '@prisma/client';
+import { User } from '@/backend/types';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 
@@ -10,7 +10,7 @@ import { LoginDto } from './dto/login.dto';
 export class AuthService {
   constructor(
     private usersService: UsersService,
-    private jwtService: JwtService,
+    private jwtService: JwtService
   ) {}
 
   /**
@@ -18,12 +18,13 @@ export class AuthService {
    */
   async validateUser(email: string, password: string): Promise<any> {
     const user = await this.usersService.findByEmail(email);
-    
-    if (user && await this.comparePasswords(password, user.password)) {
+
+    if (user && (await this.comparePasswords(password, user.password))) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password, ...result } = user;
       return result;
     }
-    
+
     return null;
   }
 
@@ -32,11 +33,11 @@ export class AuthService {
    */
   async login(loginDto: LoginDto) {
     const user = await this.validateUser(loginDto.email, loginDto.password);
-    
+
     if (!user) {
       throw new UnauthorizedException('Неверный email или пароль');
     }
-    
+
     return {
       user,
       token: this.generateToken(user),
@@ -49,23 +50,24 @@ export class AuthService {
   async register(registerDto: RegisterDto) {
     // Проверка, существует ли пользователь с таким email
     const existingUser = await this.usersService.findByEmail(registerDto.email);
-    
+
     if (existingUser) {
       throw new UnauthorizedException('Пользователь с таким email уже существует');
     }
-    
+
     // Хеширование пароля
     const hashedPassword = await this.hashPassword(registerDto.password);
-    
+
     // Создание пользователя
     const newUser = await this.usersService.create({
       ...registerDto,
       password: hashedPassword,
     });
-    
+
     // Исключаем пароль из ответа
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...user } = newUser;
-    
+
     return {
       user,
       token: this.generateToken(user),
@@ -77,11 +79,12 @@ export class AuthService {
    */
   async getMe(userId: string) {
     const user = await this.usersService.findById(userId);
-    
+
     if (!user) {
       throw new UnauthorizedException('Пользователь не найден');
     }
-    
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...result } = user;
     return result;
   }
@@ -90,12 +93,12 @@ export class AuthService {
    * Генерация JWT токена
    */
   private generateToken(user: Partial<User>) {
-    const payload = { 
+    const payload = {
       sub: user.id,
       email: user.email,
       role: user.role,
     };
-    
+
     return this.jwtService.sign(payload);
   }
 
@@ -113,4 +116,4 @@ export class AuthService {
   private async comparePasswords(plainPassword: string, hashedPassword: string): Promise<boolean> {
     return bcrypt.compare(plainPassword, hashedPassword);
   }
-} 
+}

@@ -1,9 +1,19 @@
 import { Request, Response } from 'express';
 import { prisma } from '../core/database/prisma';
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import config from '@/config';
+import jwt, { Secret, SignOptions } from 'jsonwebtoken';
 import { LoginRequest, RegisterRequest } from '../types';
+
+// Локальная копия настроек конфигурации
+const config = {
+  security: {
+    saltRounds: 10,
+  },
+  jwt: {
+    secret: process.env.JWT_SECRET || 'your-secret-key-change-in-production',
+    expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+  },
+};
 
 /**
  * Контроллер для аутентификации пользователей
@@ -44,11 +54,12 @@ export class AuthController {
       // Создаем JWT токен
       const token = jwt.sign(
         { id: user.id, email: user.email, role: user.role },
-        config.jwt.secret,
-        { expiresIn: config.jwt.expiresIn }
+        config.jwt.secret as Secret,
+        { expiresIn: config.jwt.expiresIn } as SignOptions
       );
 
       // Исключаем пароль из ответа
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password: _, ...userWithoutPassword } = user;
 
       return res.status(201).json({
@@ -99,11 +110,12 @@ export class AuthController {
       // Создаем JWT токен
       const token = jwt.sign(
         { id: user.id, email: user.email, role: user.role },
-        config.jwt.secret,
-        { expiresIn: config.jwt.expiresIn }
+        config.jwt.secret as Secret,
+        { expiresIn: config.jwt.expiresIn } as SignOptions
       );
 
       // Исключаем пароль из ответа
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password: _, ...userWithoutPassword } = user;
 
       return res.status(200).json({
@@ -150,6 +162,7 @@ export class AuthController {
       }
 
       // Исключаем пароль из ответа
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password: _, ...userWithoutPassword } = user;
 
       return res.status(200).json({
@@ -164,4 +177,4 @@ export class AuthController {
       });
     }
   }
-} 
+}
