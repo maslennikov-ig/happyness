@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ModuleValidator } from '../../core/module/module-validator';
 import { IModule, ModuleValidationResult } from '../../core/interfaces';
+import { describe, it, expect, beforeEach } from 'vitest';
 
 // Мок-класс модуля для тестирования
 class MockModule implements IModule {

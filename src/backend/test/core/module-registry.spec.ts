@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ModuleRegistry } from '../../core/module/module-registry';
 import { IModule } from '../../core/interfaces';
+import { describe, it, expect, beforeEach } from 'vitest';
 
 // Мок-класс модуля для тестирования
 class MockModule implements IModule {
