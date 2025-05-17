@@ -14,7 +14,7 @@ import { CoreModuleOptions } from '../module.module';
 @Injectable()
 export class ModuleLoader {
   private readonly logger = new Logger(ModuleLoader.name);
-  private readonly defaultModulesPath = path.join(process.cwd(), 'dist/src/backend/modules');
+  private readonly defaultModulesPath = path.join(process.cwd(), 'modules');
   private readonly modulesPath: string;
   private readonly autoloadModules: boolean;
   private readonly coreVersion: string;
@@ -24,7 +24,16 @@ export class ModuleLoader {
     private readonly moduleValidator: ModuleValidator,
     @Optional() @Inject('CORE_OPTIONS') private readonly options?: CoreModuleOptions
   ) {
-    this.modulesPath = options?.modulesPath || this.defaultModulesPath;
+    // Корректная обработка путей для работы внутри Docker-контейнера
+    if (options?.modulesPath) {
+      // Определение абсолютного пути от корня приложения
+      this.modulesPath = path.isAbsolute(options.modulesPath)
+        ? options.modulesPath
+        : path.join(process.cwd(), options.modulesPath.replace(/^src\/backend\//, ''));
+    } else {
+      this.modulesPath = this.defaultModulesPath;
+    }
+
     this.autoloadModules = options?.autoloadModules || false;
     this.coreVersion = options?.coreVersion || '1.0.0';
 
@@ -44,13 +53,21 @@ export class ModuleLoader {
    * @returns Массив загруженных модулей
    */
   async loadModules(modulesPath?: string): Promise<IModule[]> {
-    const targetPath = modulesPath || this.modulesPath;
+    let targetPath = modulesPath || this.modulesPath;
     this.logger.log(`Загрузка модулей из директории: ${targetPath}`);
 
     try {
+      // Проверка существования директории и поиск альтернативных путей
       if (!fs.existsSync(targetPath)) {
-        this.logger.warn(`Директория модулей не существует: ${targetPath}`);
-        return [];
+        // Попытка найти путь относительно корня приложения
+        const altPath = path.join(process.cwd(), 'modules');
+        if (fs.existsSync(altPath)) {
+          this.logger.log(`Директория модулей найдена по альтернативному пути: ${altPath}`);
+          targetPath = altPath;
+        } else {
+          this.logger.warn(`Директория модулей не существует: ${targetPath}`);
+          return [];
+        }
       }
 
       // Получаем список директорий модулей
@@ -101,12 +118,20 @@ export class ModuleLoader {
       const indexPath = path.join(modulePath, 'index.js');
       const modulesPath = path.join(modulePath, 'module.js');
 
+      // Также проверяем TypeScript файлы (для разработки)
+      const indexTsPath = path.join(modulePath, 'index.ts');
+      const modulesTsPath = path.join(modulePath, 'module.ts');
+
       let moduleFile = '';
 
       if (fs.existsSync(indexPath)) {
         moduleFile = indexPath;
       } else if (fs.existsSync(modulesPath)) {
         moduleFile = modulesPath;
+      } else if (fs.existsSync(indexTsPath)) {
+        moduleFile = indexTsPath;
+      } else if (fs.existsSync(modulesTsPath)) {
+        moduleFile = modulesTsPath;
       } else {
         this.logger.warn(`Не найден основной файл модуля в директории: ${modulePath}`);
         return null;

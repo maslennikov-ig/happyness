@@ -18,8 +18,8 @@ import { ContractorsModule } from './modules/contractors/contractors.module';
     CoreModule.forRoot({
       isGlobal: true,
       coreVersion: '1.0.0',
-      modulesPath: 'dist/src/backend/modules',
-      autoloadModules: true,
+      modulesPath: 'modules',
+      autoloadModules: false,
     }),
 
     // Модули приложения

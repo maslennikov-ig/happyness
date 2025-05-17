@@ -5,24 +5,45 @@ import {
   PrismaClientValidationError,
 } from '@prisma/client/runtime/library';
 
+// Глобальный экземпляр PrismaClient для предотвращения множественных подключений
+declare global {
+  var prismaInstance: PrismaClient | undefined;
+}
+
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(PrismaService.name);
+  private static isConnected = false;
 
   constructor() {
     super({
       log: process.env.NODE_ENV === 'development' ? ['query', 'info', 'warn', 'error'] : ['error'],
     });
+
+    // Используем глобальный экземпляр в режиме разработки для избежания множественных подключений
+    if (process.env.NODE_ENV === 'development') {
+      if (!global.prismaInstance) {
+        global.prismaInstance = this;
+      }
+    }
   }
 
   async onModuleInit() {
-    await this.$connect();
-    this.logger.log('Успешное подключение к базе данных');
+    // Предотвращаем множественные подключения к базе данных
+    if (!PrismaService.isConnected) {
+      await this.$connect();
+      PrismaService.isConnected = true;
+      this.logger.log('Успешное подключение к базе данных');
+    }
   }
 
   async onModuleDestroy() {
-    await this.$disconnect();
-    this.logger.log('Соединение с базой данных закрыто');
+    // Закрываем соединение только если оно было установлено этим экземпляром
+    if (PrismaService.isConnected) {
+      await this.$disconnect();
+      PrismaService.isConnected = false;
+      this.logger.log('Соединение с базой данных закрыто');
+    }
   }
 
   /**

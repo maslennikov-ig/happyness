@@ -17,6 +17,8 @@
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
+    "downlevelIteration": true,
+    "types": ["node"],
     "paths": {
       "@/*": ["../src/*"],
       "@/backend/*": ["./*"],

@@ -1,13 +1,18 @@
 import { Request, Response } from 'express';
 import { prisma } from '../core/database/prisma';
-import bcrypt from 'bcrypt';
+import * as argon2 from 'argon2';
 import jwt, { Secret, SignOptions } from 'jsonwebtoken';
 import { LoginRequest, RegisterRequest } from '../types';
 
 // Локальная копия настроек конфигурации
 const config = {
   security: {
-    saltRounds: 10,
+    argon2: {
+      type: argon2.argon2id,
+      memoryCost: 65536, // 64 MB
+      timeCost: 3, // 3 итерации
+      parallelism: 1, // 1 поток
+    },
   },
   jwt: {
     secret: process.env.JWT_SECRET || 'your-secret-key-change-in-production',
@@ -38,8 +43,8 @@ export class AuthController {
         });
       }
 
-      // Хешируем пароль
-      const hashedPassword = await bcrypt.hash(password, config.security.saltRounds);
+      // Хешируем пароль с использованием Argon2
+      const hashedPassword = await argon2.hash(password, config.security.argon2);
 
       // Создаем нового пользователя
       const user = await prisma.user.create({
@@ -97,8 +102,8 @@ export class AuthController {
         });
       }
 
-      // Проверяем пароль
-      const isPasswordValid = await bcrypt.compare(password, user.password);
+      // Проверяем пароль с использованием Argon2
+      const isPasswordValid = await argon2.verify(user.password, password);
 
       if (!isPasswordValid) {
         return res.status(401).json({

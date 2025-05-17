@@ -15,20 +15,13 @@ COPY package*.json ./
 # Установка зависимостей
 RUN npm ci
 
-# Переустановка bcrypt, чтобы правильно скомпилировать нативные зависимости
-RUN npm uninstall bcrypt && npm install bcrypt
+# Установка argon2 для хеширования паролей
+RUN npm install argon2
 
-# Копирование исходного кода
+# Копирование всего исходного кода
 COPY . .
-
-# Создаем директорию prisma, если она не существует
-RUN mkdir -p prisma
-
-# Генерация Prisma клиента только если схема существует
-RUN if [ -f prisma/schema.prisma ]; then npx prisma generate; else echo "Prisma schema not found, skipping generation"; fi
 
 # Экспорт порта для NestJS API
 EXPOSE 4000
 
-# Команда для запуска NestJS в режиме разработки (исправлено имя скрипта)
-CMD ["npm", "run", "start:backend:dev"] 
+# Команда запуска указывается в docker-compose.yml 

@@ -185,75 +185,64 @@ export class ModuleValidator {
   }
 
   /**
-   * Проверяет, есть ли циклические зависимости между модулями
-   * @param modules Карта модулей (id -> модуль)
-   * @returns Результат проверки циклических зависимостей
+   * Проверяет наличие циклических зависимостей между модулями
+   * @param modules Карта или объект с модулями (ключ - идентификатор модуля)
+   * @returns Результат проверки на циклические зависимости
    */
   validateCyclicDependencies(
     modules: Map<string, IModule> | Record<string, IModule>
   ): ModuleValidationResult {
     const errors: string[] = [];
+    const visited = new Set<string>();
+    const recursionStack = new Set<string>();
 
-    // Преобразуем объект в карту, если нужно
+    // Преобразуем входные данные в карту для удобства
     const modulesMap = modules instanceof Map ? modules : new Map(Object.entries(modules));
 
-    // Создаем граф зависимостей
-    const graph = new Map<string, string[]>();
-
-    for (const [id, module] of modulesMap.entries()) {
-      graph.set(id, [...module.dependencies]);
-    }
-
-    // Функция для поиска циклов в графе
-    const findCycle = (
-      node: string,
-      visited: Set<string> = new Set(),
-      recursionStack: Set<string> = new Set(),
-      path: string[] = []
-    ): string[] | null => {
-      // Если узел уже в стеке рекурсии, найден цикл
-      if (recursionStack.has(node)) {
-        const cycleStart = path.indexOf(node);
-        return path.slice(cycleStart).concat(node);
+    // Функция для проверки циклических зависимостей с использованием DFS
+    const checkCycle = (moduleId: string, path: string[] = []): boolean => {
+      // Если модуль уже в текущем пути рекурсии, найден цикл
+      if (recursionStack.has(moduleId)) {
+        errors.push(`Обнаружена циклическая зависимость: ${[...path, moduleId].join(' -> ')}`);
+        return true;
       }
 
-      // Если узел уже посещен и не в стеке рекурсии, цикла нет
-      if (visited.has(node)) {
-        return null;
+      // Если модуль уже посещен и цикл не обнаружен, пропускаем
+      if (visited.has(moduleId)) {
+        return false;
       }
 
-      // Добавляем узел в множества посещенных и в стек рекурсии
-      visited.add(node);
-      recursionStack.add(node);
-      path.push(node);
+      // Получаем модуль по идентификатору
+      const module = modulesMap.get(moduleId);
+      if (!module) {
+        return false;
+      }
 
-      // Проверяем соседние узлы (зависимости)
-      const neighbors = graph.get(node) || [];
+      // Добавляем модуль в текущий путь рекурсии
+      recursionStack.add(moduleId);
+      visited.add(moduleId);
 
-      for (const neighbor of neighbors) {
-        // Пропускаем несуществующие модули
-        if (!graph.has(neighbor)) continue;
+      // Новый путь с текущим модулем
+      const newPath = [...path, moduleId];
 
-        const cycle = findCycle(neighbor, visited, recursionStack, [...path]);
-        if (cycle) {
-          return cycle;
+      // Проверяем зависимости рекурсивно
+      let hasCycle = false;
+      for (const depId of module.dependencies || []) {
+        if (checkCycle(depId, newPath)) {
+          hasCycle = true;
         }
       }
 
-      // Удаляем узел из стека рекурсии (возвращаемся назад)
-      recursionStack.delete(node);
+      // Удаляем модуль из текущего пути рекурсии
+      recursionStack.delete(moduleId);
 
-      return null;
+      return hasCycle;
     };
 
-    // Проверяем каждую вершину графа
-    for (const node of graph.keys()) {
-      if (!graph.has(node)) continue;
-
-      const cycle = findCycle(node);
-      if (cycle) {
-        errors.push(`Обнаружена циклическая зависимость: ${cycle.join(' -> ')}`);
-        break; // Находим только первый цикл
+    // Проверяем каждый модуль на наличие циклических зависимостей
+    for (const [moduleId] of modulesMap) {
+      if (!visited.has(moduleId)) {
+        checkCycle(moduleId);
       }
     }
 

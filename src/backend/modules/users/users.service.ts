@@ -13,14 +13,14 @@ export class UsersService {
   async create(data: any): Promise<User> {
     return this.prisma.user.create({
       data,
-    });
+    }) as unknown as User;
   }
 
   /**
    * Получение всех пользователей
    */
   async findAll(): Promise<User[]> {
-    return this.prisma.user.findMany();
+    return this.prisma.user.findMany() as unknown as User[];
   }
 
   /**
@@ -29,7 +29,7 @@ export class UsersService {
   async findById(id: string): Promise<User | null> {
     return this.prisma.user.findUnique({
       where: { id },
-    });
+    }) as unknown as User | null;
   }
 
   /**
@@ -38,7 +38,7 @@ export class UsersService {
   async findByEmail(email: string): Promise<User | null> {
     return this.prisma.user.findUnique({
       where: { email },
-    });
+    }) as unknown as User | null;
   }
 
   /**
@@ -46,10 +46,10 @@ export class UsersService {
    */
   async update(id: string, updateUserDto: any): Promise<User> {
     try {
-      return await this.prisma.user.update({
+      return (await this.prisma.user.update({
         where: { id },
         data: updateUserDto,
-      });
+      })) as unknown as User;
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
         throw new NotFoundException(`Пользователь с ID ${id} не найден`);
@@ -63,9 +63,9 @@ export class UsersService {
    */
   async remove(id: string): Promise<User> {
     try {
-      return await this.prisma.user.delete({
+      return (await this.prisma.user.delete({
         where: { id },
-      });
+      })) as unknown as User;
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
         throw new NotFoundException(`Пользователь с ID ${id} не найден`);

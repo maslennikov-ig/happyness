@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
-import * as bcrypt from 'bcrypt';
+import * as argon2 from 'argon2';
 import { User } from '@/backend/types';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -106,14 +106,18 @@ export class AuthService {
    * Хеширование пароля
    */
   private async hashPassword(password: string): Promise<string> {
-    const saltRounds = 10;
-    return bcrypt.hash(password, saltRounds);
+    return argon2.hash(password, {
+      type: argon2.argon2id,
+      memoryCost: 65536, // 64 MB
+      timeCost: 3, // 3 итерации
+      parallelism: 1, // 1 поток
+    });
   }
 
   /**
    * Сравнение паролей
    */
   private async comparePasswords(plainPassword: string, hashedPassword: string): Promise<boolean> {
-    return bcrypt.compare(plainPassword, hashedPassword);
+    return argon2.verify(hashedPassword, plainPassword);
   }
 }

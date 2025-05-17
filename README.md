@@ -123,11 +123,7 @@ Happyness/
 
 ## Документация
 
-Более подробная документация доступна в директории [docs/](./docs/):
-
-- [Документация по архитектуре](./docs/tasks/tasks1/task21_modular_architecture.md)
-- [Документация по API-контрактам](./docs/tasks/tasks1/task23_api_contracts.md)
-- [Документация по базе данных](./docs/database/schema.md)
+Для детального ознакомления со структурой документации см. [docs/README.md](./docs/README.md).
 
 ## Разработка
 

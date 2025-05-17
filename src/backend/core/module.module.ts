@@ -13,7 +13,16 @@ import { ModuleFactory } from './module-factory.service';
 @Global()
 @Module({
   providers: [
-    PrismaService,
+    {
+      provide: PrismaService,
+      useFactory: () => {
+        // Используем глобальный экземпляр или создаем новый
+        if (global.prismaInstance) {
+          return global.prismaInstance;
+        }
+        return new PrismaService();
+      },
+    },
     ModuleRegistry,
     ModuleLoader,
     ModuleValidator,
@@ -44,7 +53,16 @@ export class CoreModule {
           provide: 'CORE_OPTIONS',
           useValue: options,
         },
-        PrismaService,
+        {
+          provide: PrismaService,
+          useFactory: () => {
+            // Используем глобальный экземпляр или создаем новый
+            if (global.prismaInstance) {
+              return global.prismaInstance;
+            }
+            return new PrismaService();
+          },
+        },
         ModuleRegistry,
         ModuleLoader,
         ModuleValidator,

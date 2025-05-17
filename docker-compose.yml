@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Frontend сервис (Next.js)
   frontend:
@@ -37,22 +35,26 @@ services:
       - '4000:4000'
     environment:
       - NODE_ENV=development
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/happyness
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/happyness?schema=public
       - REDIS_URL=redis://redis:6379
       - PORT=4000
       - API_PREFIX=/api
       - CORS_ORIGIN=http://localhost:3000
+      - JWT_SECRET=your-secret-key-change-in-production
+      - JWT_EXPIRES_IN=7d
     depends_on:
       - postgres
       - redis
     restart: unless-stopped
     networks:
       - happyness-network
+    command: sh -c "npx prisma generate && npm run start:backend:dev"
 
   # База данных PostgreSQL
   postgres:
     container_name: happyness-postgres
-    image: postgres:17.5
+    image: postgres:16
+    restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -60,16 +62,19 @@ services:
     ports:
       - '5432:5432'
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ./.docker-data/postgres:/var/lib/postgresql/data
     networks:
       - happyness-network
 
   # Redis для кэширования
   redis:
     container_name: happyness-redis
-    image: redis:8.0.1
+    image: redis:7-alpine
+    restart: always
     ports:
       - '6379:6379'
+    volumes:
+      - ./docker/redis/redis.conf:/usr/local/etc/redis/redis.conf
     networks:
       - happyness-network
 

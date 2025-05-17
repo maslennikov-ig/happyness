@@ -12,6 +12,7 @@ export interface User {
   updatedAt: Date;
 }
 
+// Определяем перечисления вручную, соответствующие схеме Prisma
 export enum UserRole {
   ADMIN = 'ADMIN',
   ENTREPRENEUR = 'ENTREPRENEUR',
@@ -44,6 +45,7 @@ export interface Project {
   contractorId?: string | null;
 }
 
+// Определяем перечисления вручную, соответствующие схеме Prisma
 export enum ProjectStatus {
   PLANNING = 'PLANNING',
   IN_PROGRESS = 'IN_PROGRESS',
@@ -65,6 +67,7 @@ export interface Request {
   contractorId?: string | null;
 }
 
+// Определяем перечисления вручную, соответствующие схеме Prisma
 export enum RequestStatus {
   OPEN = 'OPEN',
   IN_PROGRESS = 'IN_PROGRESS',
