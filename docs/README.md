@@ -9,7 +9,7 @@
 - [**sprints/**](./sprints/) - Документация по спринтам
 
   - [sprint1.md](./sprints/sprint1.md) - Описание задач первого спринта
-  - [sprint2.md](./sprints/sprint2.md) - Описание задач второго спринта (будет добавлено позже)
+  - [sprint2.md](./sprints/sprint2.md) - Описание задач второго спринта
 
 - [**tasks/**](./tasks/) - Детальное описание задач
   - [**tasks1/**](./tasks/tasks1/) - Задачи первого спринта
@@ -26,13 +26,29 @@
     - [task23_api_implementation.md](./tasks/tasks1/task23_api_implementation.md) - Примеры реализации API
     - [task23_integration.md](./tasks/tasks1/task23_integration.md) - Интеграция API-контрактов с компонентами проекта
     - [task23_summary.md](./tasks/tasks1/task23_summary.md) - Резюме выполненной работы по определению API-контрактов
-  - [**tasks2/**](./tasks/tasks2/) - Задачи второго спринта (будет добавлено позже)
+  - [**tasks2/**](./tasks/tasks2/) - Задачи второго спринта
+    - [task13.md](./tasks/tasks2/task13.md) - Улучшение базовых моделей данных
+    - [task31.md](./tasks/tasks2/task31.md) - Задача проектирования системы аутентификации
+    - [task31_auth_components.md](./tasks/tasks2/task31_auth_components.md) - Компоненты системы аутентификации
+    - [task31_auth_flows.md](./tasks/tasks2/task31_auth_flows.md) - Потоки аутентификации с диаграммами последовательности
+    - [task31_jwt_structure.md](./tasks/tasks2/task31_jwt_structure.md) - Структура JWT-токенов
+    - [task31_refresh_tokens.md](./tasks/tasks2/task31_refresh_tokens.md) - Механизм Refresh токенов
+    - [task31_client_storage.md](./tasks/tasks2/task31_client_storage.md) - Стратегия безопасного хранения JWT на клиентской стороне
 
 ### База данных
 
 - [**database/**](./database/) - Документация по базе данных
-  - [schema.md](./database/schema.md) - Описание схемы базы данных
-  - [migrations.md](./database/migrations.md) - Информация о миграциях базы данных
+  - [README.md](./database/README.md) - Обзор документации по базе данных
+  - [**models/**](./database/models/) - Документация по моделям данных
+    - [README.md](./database/models/README.md) - Обзор моделей данных
+    - [diagram.md](./database/models/diagram.md) - Диаграмма ER в формате Mermaid
+
+### Инструменты
+
+- [**context7.md**](./context7.md) - Руководство по использованию Context7 для доступа к документации библиотек:
+  - NestJS - документация по серверному фреймворку
+  - Next.js - документация по клиентскому фреймворку
+  - Prisma ORM - документация по работе с базой данных
 
 ## Навигация по документации
 
@@ -40,9 +56,14 @@
 
 - [**Архитектура**](./architecture.md) - обзор архитектуры и ссылки на детальные документы
 - [**Модули**](./modules.md) - руководство по модульной системе
+- [**База данных**](./database/README.md) - документация по моделям данных и схеме
+- [**Context7**](./context7.md) - руководство по использованию Context7 для доступа к документации библиотек
 - [**CI/CD**](./ci-cd.md) - настройка рабочих процессов
 - [**Git Workflow**](./git-workflow.md) - правила ветвления и коммитов
+- [**Roadmap**](./Roadmap.md) - план развития проекта
 - [**Changelog**](../changelog.md) - история изменений
+- [**Тестирование**](./test-guide.md) - руководство по тестированию приложения
+- [**Аутентификация**](./authentication.md) - документация по системе аутентификации с JWT
 
 ### Связь с корневым README
 
@@ -56,13 +77,14 @@
 
 В проекте используются следующие технологии:
 
-- **Фронтенд**: Next.js 14, React 18, TypeScript 5
-- **Бэкенд**: NestJS 10, TypeScript 5
-- **База данных**: PostgreSQL 16, Prisma ORM
+- **Фронтенд**: Next.js 15, React 19, TypeScript 5
+- **Бэкенд**: NestJS 11, TypeScript 5
+- **База данных**: PostgreSQL 16, Prisma ORM 6
 - **Кеширование**: Redis 7
 - **Контейнеризация**: Docker, Docker Compose
-- **Тестирование**: Vitest, Testing Library
+- **Тестирование**: Vitest 3, Testing Library, Playwright, Supertest
 - **CI/CD**: GitHub Actions
+- **Документация**: Context7 (доступ к официальной документации через AI)
 
 ## Связь с корневым README.md
 

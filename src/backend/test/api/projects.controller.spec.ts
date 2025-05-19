@@ -1,5 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ProjectsController } from '../../modules/projects/projects.controller';
 import { ProjectsService } from '../../modules/projects/projects.service';
 import { PrismaService } from '../../core/database/prisma.service';
 import { CreateProjectDto } from '../../modules/projects/dto/create-project.dto';

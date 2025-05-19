@@ -32,6 +32,24 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    services:
+      postgres-test:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: happyness_test
+        ports:
+          - 5434:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL_TEST: postgresql://postgres:postgres@localhost:5434/happyness_test?schema=public
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -48,8 +66,22 @@ jobs:
       - name: Generate Prisma client
         run: npm run prisma:generate
 
+      - name: Apply Prisma migrations to test DB
+        run: npx prisma migrate deploy --schema=prisma/schema.prisma --preview-feature --url=$DATABASE_URL_TEST
+
       - name: Run frontend tests
-        run: npm run test:frontend
+        run: npm run test:frontend -- --coverage
 
       - name: Run backend tests
-        run: npm run test:backend
+        run: npm run test:backend -- --coverage
+
+      - name: Run E2E tests
+        if: false # Disabled for now since it requires running servers
+        run: npm run test:e2e
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports
+          path: coverage/
+          if-no-files-found: warn

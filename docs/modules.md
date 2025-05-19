@@ -150,19 +150,19 @@ export class MyModule extends BaseModule {
     );
   }
 
-  async initialize(): Promise<void> {
+  protected async onInitialize(): Promise<void> {
     // Логика инициализации
     console.log(`${this.name} initializing`);
     // Например, подключение к базе данных, настройка и т.д.
   }
 
-  async start(): Promise<void> {
+  protected async onStart(): Promise<void> {
     // Логика запуска
     console.log(`${this.name} starting`);
     // Например, запуск серверов, слушателей и т.д.
   }
 
-  async stop(): Promise<void> {
+  protected async onStop(): Promise<void> {
     // Логика остановки
     console.log(`${this.name} stopping`);
     // Например, закрытие соединений, освобождение ресурсов и т.д.
@@ -182,7 +182,7 @@ export * from './my-module';
 ```typescript
 // app.module.ts
 import { Module } from '@nestjs/common';
-import { CoreModule } from './core/module.module';
+import { CoreModule } from './core/module/core.module';
 
 @Module({
   imports: [
@@ -203,7 +203,7 @@ export class AppModule {}
 ```typescript
 // Внедрите ModuleRegistryService в ваш сервис или контроллер
 import { Injectable } from '@nestjs/common';
-import { ModuleRegistryService } from './core/module-registry.service';
+import { ModuleRegistryService } from './core/module/module-registry.service';
 import { MyModule } from './modules/my-module/my-module';
 
 @Injectable()
@@ -221,7 +221,7 @@ export class AppService {
 ```typescript
 // Внедрите ModuleFactory в ваш сервис или контроллер
 import { Injectable } from '@nestjs/common';
-import { ModuleFactory } from './core/module-factory.service';
+import { ModuleFactory } from './core/module/module-factory.service';
 import { BaseModule } from './core/module/base-module';
 
 @Injectable()

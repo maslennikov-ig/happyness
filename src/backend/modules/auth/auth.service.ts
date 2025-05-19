@@ -1,16 +1,18 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
-import * as argon2 from 'argon2';
-import { User } from '@/backend/types';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { PasswordService } from './services/password.service';
+import { TokenService } from './services/token.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
-    private jwtService: JwtService
+    private jwtService: JwtService,
+    private passwordService: PasswordService,
+    private tokenService: TokenService
   ) {}
 
   /**
@@ -19,7 +21,7 @@ export class AuthService {
   async validateUser(email: string, password: string): Promise<any> {
     const user = await this.usersService.findByEmail(email);
 
-    if (user && (await this.comparePasswords(password, user.password))) {
+    if (user && (await this.passwordService.verify(user.password, password))) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password, ...result } = user;
       return result;
@@ -38,9 +40,15 @@ export class AuthService {
       throw new UnauthorizedException('Неверный email или пароль');
     }
 
+    // Обновляем дату последнего входа
+    await this.usersService.update(user.id, { lastLoginAt: new Date() });
+
+    // Генерируем токены доступа и обновления
+    const tokens = this.tokenService.generateTokens(user);
+
     return {
       user,
-      token: this.generateToken(user),
+      ...tokens,
     };
   }
 
@@ -55,8 +63,18 @@ export class AuthService {
       throw new UnauthorizedException('Пользователь с таким email уже существует');
     }
 
+    // Проверка надежности пароля
+    const userInputs = [registerDto.email, registerDto.name].filter(Boolean);
+    if (!this.passwordService.isPasswordStrong(registerDto.password, userInputs)) {
+      const { feedback } = this.passwordService.checkPasswordStrength(
+        registerDto.password,
+        userInputs
+      );
+      throw new BadRequestException(`Пароль недостаточно надежный. ${feedback}`);
+    }
+
     // Хеширование пароля
-    const hashedPassword = await this.hashPassword(registerDto.password);
+    const hashedPassword = await this.passwordService.hash(registerDto.password);
 
     // Создание пользователя
     const newUser = await this.usersService.create({
@@ -68,9 +86,12 @@ export class AuthService {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...user } = newUser;
 
+    // Генерируем токены доступа и обновления
+    const tokens = this.tokenService.generateTokens(user);
+
     return {
       user,
-      token: this.generateToken(user),
+      ...tokens,
     };
   }
 
@@ -90,34 +111,66 @@ export class AuthService {
   }
 
   /**
-   * Генерация JWT токена
+   * Выход из системы
+   * В будущем здесь можно добавить инвалидацию токенов через blacklist
    */
-  private generateToken(user: Partial<User>) {
-    const payload = {
-      sub: user.id,
-      email: user.email,
-      role: user.role,
-    };
-
-    return this.jwtService.sign(payload);
+  async logout(userId: string) {
+    // В будущем здесь будет логика для инвалидации токенов пользователя
+    console.warn(`Выход пользователя с ID: ${userId}`);
+    return { success: true };
   }
 
   /**
-   * Хеширование пароля
+   * Обновление токена доступа
    */
-  private async hashPassword(password: string): Promise<string> {
-    return argon2.hash(password, {
-      type: argon2.argon2id,
-      memoryCost: 65536, // 64 MB
-      timeCost: 3, // 3 итерации
-      parallelism: 1, // 1 поток
-    });
+  async refreshToken(refreshToken: string) {
+    const payload = this.tokenService.verifyRefreshToken(refreshToken);
+
+    if (!payload) {
+      throw new UnauthorizedException('Недействительный refresh токен');
+    }
+
+    const user = await this.usersService.findById(payload.sub);
+
+    if (!user || !user.isActive) {
+      throw new UnauthorizedException('Пользователь не существует или деактивирован');
+    }
+
+    // Генерируем новую пару токенов
+    const tokens = this.tokenService.generateTokens(user);
+
+    return tokens;
   }
 
   /**
-   * Сравнение паролей
+   * Изменение пароля пользователя
    */
-  private async comparePasswords(plainPassword: string, hashedPassword: string): Promise<boolean> {
-    return argon2.verify(hashedPassword, plainPassword);
+  async changePassword(userId: string, currentPassword: string, newPassword: string) {
+    const user = await this.usersService.findById(userId);
+
+    if (!user) {
+      throw new UnauthorizedException('Пользователь не найден');
+    }
+
+    // Проверяем текущий пароль
+    const isPasswordValid = await this.passwordService.verify(user.password, currentPassword);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Неверный текущий пароль');
+    }
+
+    // Проверка надежности нового пароля
+    const userInputs = [user.email, user.name].filter(Boolean);
+    if (!this.passwordService.isPasswordStrong(newPassword, userInputs)) {
+      const { feedback } = this.passwordService.checkPasswordStrength(newPassword, userInputs);
+      throw new BadRequestException(`Пароль недостаточно надежный. ${feedback}`);
+    }
+
+    // Хеширование нового пароля
+    const hashedPassword = await this.passwordService.hash(newPassword);
+
+    // Обновляем пароль пользователя
+    await this.usersService.update(userId, { password: hashedPassword });
+
+    return { success: true };
   }
 }

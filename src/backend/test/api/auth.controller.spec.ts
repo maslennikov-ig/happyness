@@ -1,5 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AuthController } from '../../modules/auth/auth.controller';
 import { AuthService } from '../../modules/auth/auth.service';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../../modules/users/users.service';
@@ -8,6 +7,10 @@ import { RegisterDto } from '../../modules/auth/dto/register.dto';
 import { LoginDto } from '../../modules/auth/dto/login.dto';
 import { UserRole } from '../../types';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { RefreshTokenDto } from '../../modules/auth/dto/refresh-token.dto';
+import { ChangePasswordDto } from '../../modules/auth/dto/change-password.dto';
+import { PasswordService } from '../../modules/auth/services/password.service';
+import { TokenService } from '../../modules/auth/services/token.service';
 
 // Создаем мок-класс контроллера
 class MockAuthController {
@@ -24,6 +27,30 @@ class MockAuthController {
   async getMe(req) {
     return this.authService.getMe(req.user.sub);
   }
+
+  async logout(req) {
+    return this.authService.logout(req.user.sub);
+  }
+
+  async refreshToken(refreshTokenDto: RefreshTokenDto) {
+    return this.authService.refreshToken(refreshTokenDto.refreshToken);
+  }
+
+  async changePassword(req, changePasswordDto: ChangePasswordDto) {
+    return this.authService.changePassword(
+      req.user.sub,
+      changePasswordDto.currentPassword,
+      changePasswordDto.newPassword
+    );
+  }
+
+  async verifyToken(req) {
+    return { valid: true, user: req.user };
+  }
+
+  async adminRoute() {
+    return { message: 'Это защищенный маршрут для администраторов' };
+  }
 }
 
 describe('AuthController', () => {
@@ -35,6 +62,9 @@ describe('AuthController', () => {
     register: vi.fn(),
     login: vi.fn(),
     getMe: vi.fn(),
+    logout: vi.fn(),
+    refreshToken: vi.fn(),
+    changePassword: vi.fn(),
   };
 
   const mockJwtService = {
@@ -46,6 +76,21 @@ describe('AuthController', () => {
     findByEmail: vi.fn(),
     create: vi.fn(),
     findById: vi.fn(),
+    update: vi.fn(),
+  };
+
+  const mockPasswordService = {
+    hash: vi.fn(),
+    verify: vi.fn(),
+    checkPasswordStrength: vi.fn(),
+    isPasswordStrong: vi.fn(),
+  };
+
+  const mockTokenService = {
+    generateTokens: vi.fn(),
+    generateAccessToken: vi.fn(),
+    generateRefreshToken: vi.fn(),
+    verifyRefreshToken: vi.fn(),
   };
 
   beforeEach(async () => {
@@ -67,6 +112,14 @@ describe('AuthController', () => {
         {
           provide: PrismaService,
           useValue: {},
+        },
+        {
+          provide: PasswordService,
+          useValue: mockPasswordService,
+        },
+        {
+          provide: TokenService,
+          useValue: mockTokenService,
         },
       ],
     }).compile();
@@ -97,7 +150,9 @@ describe('AuthController', () => {
 
       const mockResponse = {
         user: { id: '1', email: registerDto.email, name: registerDto.name, role: registerDto.role },
-        token: 'test-token',
+        accessToken: 'test-access-token',
+        refreshToken: 'test-refresh-token',
+        expiresIn: 900,
       };
 
       mockAuthService.register.mockResolvedValue(mockResponse);
@@ -121,7 +176,9 @@ describe('AuthController', () => {
 
       const mockResponse = {
         user: { id: '1', email: loginDto.email },
-        token: 'test-token',
+        accessToken: 'test-access-token',
+        refreshToken: 'test-refresh-token',
+        expiresIn: 900,
       };
 
       mockAuthService.login.mockResolvedValue(mockResponse);
@@ -149,6 +206,96 @@ describe('AuthController', () => {
       // Проверка результатов
       expect(mockAuthService.getMe).toHaveBeenCalledWith('1');
       expect(result).toEqual(mockUser);
+    });
+  });
+
+  describe('logout', () => {
+    it('должен вызывать метод logout сервиса', async () => {
+      // Подготовка тестовых данных
+      const req = { user: { sub: '1' } };
+      const mockResult = { success: true };
+
+      mockAuthService.logout.mockResolvedValue(mockResult);
+
+      // Вызов тестируемого метода
+      const result = await controller.logout(req);
+
+      // Проверка результатов
+      expect(mockAuthService.logout).toHaveBeenCalledWith('1');
+      expect(result).toEqual(mockResult);
+    });
+  });
+
+  describe('refreshToken', () => {
+    it('должен вызывать метод refreshToken сервиса', async () => {
+      // Подготовка тестовых данных
+      const refreshTokenDto: RefreshTokenDto = {
+        refreshToken: 'old-refresh-token',
+      };
+
+      const mockResponse = {
+        accessToken: 'new-access-token',
+        refreshToken: 'new-refresh-token',
+        expiresIn: 900,
+      };
+
+      mockAuthService.refreshToken.mockResolvedValue(mockResponse);
+
+      // Вызов тестируемого метода
+      const result = await controller.refreshToken(refreshTokenDto);
+
+      // Проверка результатов
+      expect(mockAuthService.refreshToken).toHaveBeenCalledWith(refreshTokenDto.refreshToken);
+      expect(result).toEqual(mockResponse);
+    });
+  });
+
+  describe('changePassword', () => {
+    it('должен вызывать метод changePassword сервиса', async () => {
+      // Подготовка тестовых данных
+      const req = { user: { sub: '1' } };
+      const changePasswordDto: ChangePasswordDto = {
+        currentPassword: 'oldPassword123',
+        newPassword: 'newPassword456',
+      };
+
+      const mockResult = { success: true };
+
+      mockAuthService.changePassword.mockResolvedValue(mockResult);
+
+      // Вызов тестируемого метода
+      const result = await controller.changePassword(req, changePasswordDto);
+
+      // Проверка результатов
+      expect(mockAuthService.changePassword).toHaveBeenCalledWith(
+        '1',
+        changePasswordDto.currentPassword,
+        changePasswordDto.newPassword
+      );
+      expect(result).toEqual(mockResult);
+    });
+  });
+
+  describe('verifyToken', () => {
+    it('должен возвращать информацию о валидности токена', async () => {
+      // Подготовка тестовых данных
+      const req = { user: { sub: '1', email: 'test@example.com', role: UserRole.ENTREPRENEUR } };
+
+      // Вызов тестируемого метода
+      const result = await controller.verifyToken(req);
+
+      // Проверка результатов
+      expect(result).toEqual({ valid: true, user: req.user });
+    });
+  });
+
+  describe('adminRoute', () => {
+    it('должен возвращать сообщение для защищенного маршрута', async () => {
+      // Вызов тестируемого метода
+      const result = await controller.adminRoute();
+
+      // Проверка результатов
+      expect(result).toEqual({ message: 'Это защищенный маршрут для администраторов' });
     });
   });
 });

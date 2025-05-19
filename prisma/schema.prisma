@@ -12,16 +12,35 @@ datasource db {
 
 // Модель пользователя
 model User {
-  id         String      @id @default(uuid())
-  email      String      @unique
-  name       String?
-  password   String
-  role       UserRole    @default(ENTREPRENEUR)
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
-  projects   Project[]
-  requests   Request[]
-  contractor Contractor?
+  id               String          @id @default(uuid())
+  email            String          @unique
+  name             String?
+  password         String
+  role             UserRole        @default(ENTREPRENEUR)
+  phone            String?
+  avatar           String?
+  isActive         Boolean         @default(true)
+  lastLoginAt      DateTime?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  deletedAt        DateTime?
+  projects         Project[]
+  requests         Request[]
+  contractor       Contractor?
+  notifications    Notification[]
+  sentMessages     Message[]       @relation("MessageSender")
+  receivedMessages Message[]       @relation("MessageReceiver")
+  documents        Document[]
+  reviews          Review[]        @relation("ReviewAuthor")
+  receivedReviews  Review[]        @relation("ReviewTarget")
+  portfolioItems   PortfolioItem[]
+  paymentMethods   PaymentMethod[]
+  transactions     Transaction[]
+  activities       ActivityLog[]
+
+  @@index([email])
+  @@index([role])
+  @@index([isActive])
 }
 
 // Роли пользователей
@@ -33,18 +52,36 @@ enum UserRole {
 
 // Модель подрядчика
 model Contractor {
-  id          String    @id @default(uuid())
-  userId      String    @unique
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  companyName String?
-  description String?
-  services    String[]
-  rating      Float     @default(0)
-  verified    Boolean   @default(false)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  requests    Request[]
-  projects    Project[]
+  id              String          @id @default(uuid())
+  userId          String          @unique
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName     String?
+  description     String?
+  services        String[]
+  specializations String[]
+  experience      Int             @default(0) // Опыт в годах
+  rating          Float           @default(0)
+  reviewCount     Int             @default(0)
+  verified        Boolean         @default(false)
+  contactEmail    String?
+  contactPhone    String?
+  website         String?
+  address         String?
+  socialLinks     Json? // JSON с ссылками на соцсети
+  availableHours  Json? // JSON с доступными часами работы
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  deletedAt       DateTime?
+  requests        Request[]
+  projects        Project[]
+  proposals       Proposal[]
+  portfolioItems  PortfolioItem[]
+  skills          Skill[]
+  categories      Category[]
+
+  @@index([rating])
+  @@index([verified])
+  @@index([services])
 }
 
 // Модель проекта
@@ -56,13 +93,31 @@ model Project {
   budget       Float?
   startDate    DateTime?
   endDate      DateTime?
+  completedAt  DateTime?
+  priority     Priority      @default(MEDIUM)
+  tags         String[]
+  visibility   Visibility    @default(PUBLIC)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
+  deletedAt    DateTime?
   ownerId      String
   owner        User          @relation(fields: [ownerId], references: [id])
   contractorId String?
   contractor   Contractor?   @relation(fields: [contractorId], references: [id])
   requests     Request[]
+  attachments  Attachment[]
+  milestones   Milestone[]
+  activities   ActivityLog[]
+  documents    Document[]
+  messages     Message[]
+  reviews      Review[]
+  transactions Transaction[]
+
+  @@index([ownerId])
+  @@index([contractorId])
+  @@index([status])
+  @@index([visibility])
+  @@index([priority])
 }
 
 // Статусы проекта
@@ -71,24 +126,58 @@ enum ProjectStatus {
   IN_PROGRESS
   COMPLETED
   CANCELLED
+  ON_HOLD
+  REVIEW
+}
+
+// Приоритеты
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+// Видимость
+enum Visibility {
+  PUBLIC
+  PRIVATE
+  INVITATION_ONLY
 }
 
 // Модель запроса
 model Request {
-  id           String        @id @default(uuid())
-  title        String
-  description  String
-  budget       Float?
-  deadline     DateTime?
-  status       RequestStatus @default(OPEN)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  ownerId      String
-  owner        User          @relation(fields: [ownerId], references: [id])
-  projectId    String?
-  project      Project?      @relation(fields: [projectId], references: [id])
-  contractorId String?
-  contractor   Contractor?   @relation(fields: [contractorId], references: [id])
+  id                 String        @id @default(uuid())
+  title              String
+  description        String
+  budget             Float?
+  deadline           DateTime?
+  status             RequestStatus @default(OPEN)
+  category           String?
+  specializationTags String[]
+  requiredSkills     String[]
+  location           String?
+  isRemote           Boolean       @default(false)
+  isUrgent           Boolean       @default(false)
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  deletedAt          DateTime?
+  ownerId            String
+  owner              User          @relation(fields: [ownerId], references: [id])
+  projectId          String?
+  project            Project?      @relation(fields: [projectId], references: [id])
+  contractorId       String?
+  contractor         Contractor?   @relation(fields: [contractorId], references: [id])
+  proposals          Proposal[]
+  attachments        Attachment[]
+  activities         ActivityLog[]
+  messages           Message[]
+
+  @@index([ownerId])
+  @@index([status])
+  @@index([category])
+  @@index([isUrgent])
+  @@index([createdAt])
 }
 
 // Статусы запроса
@@ -97,4 +186,333 @@ enum RequestStatus {
   IN_PROGRESS
   COMPLETED
   CANCELLED
+  PENDING
+  REJECTED
+}
+
+// Модель предложения от подрядчика
+model Proposal {
+  id            String         @id @default(uuid())
+  requestId     String
+  request       Request        @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  contractorId  String
+  contractor    Contractor     @relation(fields: [contractorId], references: [id], onDelete: Cascade)
+  price         Float
+  description   String
+  estimatedDays Int?
+  status        ProposalStatus @default(PENDING)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  messages      Message[]
+
+  @@index([requestId])
+  @@index([contractorId])
+  @@index([status])
+}
+
+// Статусы предложения
+enum ProposalStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+// Модель вехи проекта
+model Milestone {
+  id          String          @id @default(uuid())
+  projectId   String
+  project     Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  dueDate     DateTime?
+  completedAt DateTime?
+  status      MilestoneStatus @default(PENDING)
+  amount      Float?
+  order       Int             @default(0)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  tasks       Task[]
+
+  @@index([projectId])
+  @@index([status])
+}
+
+// Статусы вехи
+enum MilestoneStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+// Модель задачи
+model Task {
+  id          String     @id @default(uuid())
+  milestoneId String
+  milestone   Milestone  @relation(fields: [milestoneId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  status      TaskStatus @default(PENDING)
+  dueDate     DateTime?
+  completedAt DateTime?
+  assignedTo  String? // userId
+  priority    Priority   @default(MEDIUM)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([milestoneId])
+  @@index([status])
+  @@index([priority])
+}
+
+// Статусы задачи
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+// Модель сообщения
+model Message {
+  id         String    @id @default(uuid())
+  content    String
+  senderId   String
+  sender     User      @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId String
+  receiver   User      @relation("MessageReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  projectId  String?
+  project    Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  requestId  String?
+  request    Request?  @relation(fields: [requestId], references: [id], onDelete: SetNull)
+  proposalId String?
+  proposal   Proposal? @relation(fields: [proposalId], references: [id], onDelete: SetNull)
+  readAt     DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([readAt])
+}
+
+// Модель уведомления
+model Notification {
+  id                String           @id @default(uuid())
+  userId            String
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type              NotificationType
+  title             String
+  content           String
+  isRead            Boolean          @default(false)
+  relatedEntityId   String? // ID объекта, к которому относится уведомление
+  relatedEntityType String? // Тип объекта (проект, запрос, etc.)
+  createdAt         DateTime         @default(now())
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+}
+
+// Типы уведомлений
+enum NotificationType {
+  INFO
+  WARNING
+  SUCCESS
+  ERROR
+}
+
+// Модель документа
+model Document {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  fileUrl     String
+  fileType    String
+  fileSize    Int
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId   String?
+  project     Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([fileType])
+}
+
+// Модель вложения (для проектов и запросов)
+model Attachment {
+  id        String   @id @default(uuid())
+  filename  String
+  fileUrl   String
+  fileType  String
+  fileSize  Int
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  requestId String?
+  request   Request? @relation(fields: [requestId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+
+  @@index([projectId])
+  @@index([requestId])
+}
+
+// Модель отзыва
+model Review {
+  id        String   @id @default(uuid())
+  authorId  String
+  author    User     @relation("ReviewAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  targetId  String
+  target    User     @relation("ReviewTarget", fields: [targetId], references: [id], onDelete: Cascade)
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  rating    Float
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([authorId])
+  @@index([targetId])
+  @@index([projectId])
+  @@index([rating])
+}
+
+// Модель элемента портфолио
+model PortfolioItem {
+  id             String      @id @default(uuid())
+  title          String
+  description    String?
+  imageUrl       String?
+  projectUrl     String?
+  completionDate DateTime?
+  userId         String
+  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contractorId   String?
+  contractor     Contractor? @relation(fields: [contractorId], references: [id], onDelete: SetNull)
+  skills         String[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@index([userId])
+  @@index([contractorId])
+}
+
+// Модель платежного метода
+model PaymentMethod {
+  id            String        @id @default(uuid())
+  userId        String
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type          PaymentType
+  provider      String
+  accountNumber String? // Замаскированный номер счета
+  expiryDate    DateTime?
+  isDefault     Boolean       @default(false)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  transactions  Transaction[]
+
+  @@index([userId])
+  @@index([isDefault])
+}
+
+// Типы платежных методов
+enum PaymentType {
+  CREDIT_CARD
+  BANK_ACCOUNT
+  ELECTRONIC_WALLET
+  CRYPTOCURRENCY
+}
+
+// Модель транзакции
+model Transaction {
+  id              String            @id @default(uuid())
+  userId          String
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId       String?
+  project         Project?          @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  paymentMethodId String?
+  paymentMethod   PaymentMethod?    @relation(fields: [paymentMethodId], references: [id], onDelete: SetNull)
+  amount          Float
+  currency        String            @default("RUB")
+  type            TransactionType
+  status          TransactionStatus @default(PENDING)
+  description     String?
+  externalId      String? // ID в платежной системе
+  createdAt       DateTime          @default(now())
+  completedAt     DateTime?
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([status])
+  @@index([type])
+  @@index([createdAt])
+}
+
+// Типы транзакций
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  PAYMENT
+  REFUND
+  FEE
+}
+
+// Статусы транзакций
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+// Модель журнала активности
+model ActivityLog {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action     String
+  entityType String // Тип сущности (Project, Request, User и т.д.)
+  entityId   String // ID сущности
+  details    Json? // Детали изменений
+  projectId  String?
+  project    Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  requestId  String?
+  request    Request? @relation(fields: [requestId], references: [id], onDelete: SetNull)
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@index([projectId])
+  @@index([requestId])
+}
+
+// Модель навыка
+model Skill {
+  id          String       @id @default(uuid())
+  name        String       @unique
+  description String?
+  contractors Contractor[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+// Модель категории
+model Category {
+  id            String       @id @default(uuid())
+  name          String       @unique
+  description   String?
+  parentId      String?
+  parent        Category?    @relation("SubCategories", fields: [parentId], references: [id])
+  subCategories Category[]   @relation("SubCategories")
+  contractors   Contractor[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([parentId])
 }
