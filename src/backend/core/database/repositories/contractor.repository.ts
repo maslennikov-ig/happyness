@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Contractor, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { BaseRepository } from './base.repository';
 import { PrismaService } from '../prisma.service';
 
@@ -7,7 +7,8 @@ import { PrismaService } from '../prisma.service';
  * Репозиторий для работы с подрядчиками
  */
 @Injectable()
-export class ContractorRepository extends BaseRepository<Contractor, number> {
+// TODO: заменить Contractor на корректный тип из @prisma/client после генерации Prisma Client
+export class ContractorRepository extends BaseRepository<any, string> {
   protected readonly model = 'contractor';
 
   constructor(protected readonly prisma: PrismaService) {
@@ -19,7 +20,7 @@ export class ContractorRepository extends BaseRepository<Contractor, number> {
    * @param userId ID пользователя
    * @returns Массив подрядчиков
    */
-  async findByUserId(userId: number): Promise<Contractor[]> {
+  async findByUserId(userId: string): Promise<any[]> {
     return this.findAll({ where: { userId } });
   }
 
@@ -28,7 +29,7 @@ export class ContractorRepository extends BaseRepository<Contractor, number> {
    * @param specialization Специализация
    * @returns Массив подрядчиков с указанной специализацией
    */
-  async findBySpecialization(specialization: string): Promise<Contractor[]> {
+  async findBySpecialization(specialization: string): Promise<any[]> {
     return this.findAll({
       where: {
         specializations: {
@@ -43,7 +44,7 @@ export class ContractorRepository extends BaseRepository<Contractor, number> {
    * @param skills Массив навыков
    * @returns Массив подрядчиков с указанными навыками
    */
-  async findBySkills(skills: string[]): Promise<Contractor[]> {
+  async findBySkills(skills: string[]): Promise<any[]> {
     return this.findAll({
       where: {
         skills: {
@@ -63,7 +64,7 @@ export class ContractorRepository extends BaseRepository<Contractor, number> {
    * @param rating Новый рейтинг
    * @returns Обновленный подрядчик
    */
-  async updateRating(id: number, rating: number): Promise<Contractor> {
+  async updateRating(id: string, rating: number): Promise<any> {
     return this.update(id, { rating });
   }
 
@@ -72,7 +73,7 @@ export class ContractorRepository extends BaseRepository<Contractor, number> {
    * @param id ID подрядчика
    * @returns Обновленный подрядчик
    */
-  async incrementReviewCount(id: number): Promise<Contractor> {
+  async incrementReviewCount(id: string): Promise<any> {
     const contractor = await this.findById(id);
     if (!contractor) {
       throw new Error(`Подрядчик с ID ${id} не найден`);
@@ -88,7 +89,7 @@ export class ContractorRepository extends BaseRepository<Contractor, number> {
    * @param id ID подрядчика
    * @returns Удаленный подрядчик
    */
-  async softDelete(id: number): Promise<Contractor> {
+  async softDelete(id: string): Promise<any> {
     return this.update(id, { deletedAt: new Date() });
   }
 
@@ -97,7 +98,7 @@ export class ContractorRepository extends BaseRepository<Contractor, number> {
    * @param id ID подрядчика
    * @returns Восстановленный подрядчик
    */
-  async restore(id: number): Promise<Contractor> {
+  async restore(id: string): Promise<any> {
     return this.update(id, { deletedAt: null });
   }
 
@@ -109,8 +110,8 @@ export class ContractorRepository extends BaseRepository<Contractor, number> {
   async findAllWithDetails(options?: {
     skip?: number;
     take?: number;
-    where?: Prisma.ContractorWhereInput;
-  }): Promise<Contractor[]> {
+    where?: any;
+  }): Promise<any[]> {
     const { skip, take, where } = options || {};
 
     return this.findAll({
@@ -131,7 +132,7 @@ export class ContractorRepository extends BaseRepository<Contractor, number> {
    * @param id ID подрядчика
    * @returns Подрядчик со всеми связями
    */
-  async findByIdWithDetails(id: number): Promise<Contractor | null> {
+  async findByIdWithDetails(id: string): Promise<any | null> {
     return this.findById(id, {
       include: {
         user: true,
@@ -156,7 +157,7 @@ export class ContractorRepository extends BaseRepository<Contractor, number> {
    * @param searchTerm Поисковый запрос
    * @returns Массив подрядчиков, соответствующих запросу
    */
-  async search(searchTerm: string): Promise<Contractor[]> {
+  async search(searchTerm: string): Promise<any[]> {
     const term = searchTerm.trim();
 
     if (!term) {
@@ -190,7 +191,7 @@ export class ContractorRepository extends BaseRepository<Contractor, number> {
    * @param limit Количество подрядчиков
    * @returns Массив подрядчиков, отсортированных по рейтингу
    */
-  async findTopRated(limit = 10): Promise<Contractor[]> {
+  async findTopRated(limit = 10): Promise<any[]> {
     return this.findAll({
       take: limit,
       orderBy: { rating: 'desc' },

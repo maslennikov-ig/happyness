@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
-import { UserRole } from '@/backend/types';
+import { UserRole } from '../../../types';
 
 export class RegisterDto {
   @ApiProperty({

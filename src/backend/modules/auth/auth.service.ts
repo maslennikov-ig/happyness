@@ -33,7 +33,7 @@ export class AuthService {
   /**
    * Вход пользователя
    */
-  async login(loginDto: LoginDto) {
+  async login(loginDto: LoginDto): Promise<any> {
     const user = await this.validateUser(loginDto.email, loginDto.password);
 
     if (!user) {
@@ -55,7 +55,7 @@ export class AuthService {
   /**
    * Регистрация нового пользователя
    */
-  async register(registerDto: RegisterDto) {
+  async register(registerDto: RegisterDto): Promise<any> {
     // Проверка, существует ли пользователь с таким email
     const existingUser = await this.usersService.findByEmail(registerDto.email);
 
@@ -98,7 +98,7 @@ export class AuthService {
   /**
    * Получение текущего пользователя по токену
    */
-  async getMe(userId: string) {
+  async getMe(userId: string): Promise<any> {
     const user = await this.usersService.findById(userId);
 
     if (!user) {
@@ -114,7 +114,7 @@ export class AuthService {
    * Выход из системы
    * Отзывает все активные refresh токены пользователя
    */
-  async logout(userId: string) {
+  async logout(userId: string): Promise<{ success: boolean }> {
     // Отзываем все токены пользователя
     await this.tokenService.revokeAllUserTokens(userId);
     return { success: true };
@@ -123,7 +123,7 @@ export class AuthService {
   /**
    * Обновление токена доступа с поддержкой ротации refresh токенов
    */
-  async refreshToken(refreshToken: string) {
+  async refreshToken(refreshToken: string): Promise<any> {
     // Используем обновленный TokenService с ротацией токенов
     const tokens = await this.tokenService.refreshTokens(refreshToken);
 
@@ -137,7 +137,7 @@ export class AuthService {
   /**
    * Изменение пароля пользователя
    */
-  async changePassword(userId: string, currentPassword: string, newPassword: string) {
+  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<any> {
     const user = await this.usersService.findById(userId);
 
     if (!user) {

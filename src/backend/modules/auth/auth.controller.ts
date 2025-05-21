@@ -8,6 +8,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { Request as ExpressRequest } from 'express';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -28,7 +29,7 @@ export class AuthController {
   @ApiResponse({ status: 201, description: 'Пользователь успешно зарегистрирован' })
   @ApiResponse({ status: 400, description: 'Пользователь с таким email уже существует' })
   @Post('register')
-  async register(@Body() registerDto: RegisterDto) {
+  async register(@Body() registerDto: RegisterDto): Promise<any> {
     return this.authService.register(registerDto);
   }
 
@@ -37,7 +38,7 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Неверный email или пароль' })
   @UseGuards(LocalAuthGuard)
   @Post('login')
-  async login(@Body() loginDto: LoginDto) {
+  async login(@Body() loginDto: LoginDto): Promise<any> {
     return this.authService.login(loginDto);
   }
 
@@ -47,8 +48,8 @@ export class AuthController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  async getMe(@Request() req) {
-    return this.authService.getMe(req.user.sub);
+  async getMe(@Request() req: ExpressRequest): Promise<any> {
+    return this.authService.getMe((req as any).user.sub);
   }
 
   @ApiOperation({ summary: 'Выход из системы' })
@@ -66,7 +67,7 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Недействительный refresh токен' })
   @HttpCode(HttpStatus.OK)
   @Post('refresh-token')
-  async refreshToken(@Body() refreshTokenDto: RefreshTokenDto) {
+  async refreshToken(@Body() refreshTokenDto: RefreshTokenDto): Promise<any> {
     return this.authService.refreshToken(refreshTokenDto.refreshToken);
   }
 
@@ -80,9 +81,12 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   @Post('change-password')
-  async changePassword(@Request() req, @Body() changePasswordDto: ChangePasswordDto) {
+  async changePassword(
+    @Request() req: ExpressRequest,
+    @Body() changePasswordDto: ChangePasswordDto
+  ): Promise<any> {
     return this.authService.changePassword(
-      req.user.sub,
+      (req as any).user.sub,
       changePasswordDto.currentPassword,
       changePasswordDto.newPassword
     );
@@ -95,8 +99,8 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Get('verify')
   @HttpCode(HttpStatus.OK)
-  async verifyToken(@Request() req) {
-    return { valid: true, user: req.user };
+  async verifyToken(@Request() req: ExpressRequest): Promise<{ valid: boolean; user: any }> {
+    return { valid: true, user: (req as any).user };
   }
 
   @ApiOperation({ summary: 'Тестовый эндпоинт для проверки ролей (только для администраторов)' })
@@ -106,7 +110,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Roles(UserRole.ADMIN)
   @Get('admin')
-  async adminRoute() {
+  async adminRoute(): Promise<{ message: string }> {
     return { message: 'Это защищенный маршрут для администраторов' };
   }
 }
