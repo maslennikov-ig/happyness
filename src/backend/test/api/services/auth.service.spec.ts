@@ -1,4 +1,3 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from '../../../modules/auth/auth.service';
 import { UsersService } from '../../../modules/users/users.service';
 import { JwtService } from '@nestjs/jwt';
@@ -8,22 +7,8 @@ import { UserRole } from '../../../types';
 import { UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-// Создаем трансформер для конструктора AuthService, чтобы мы могли инстанцировать его напрямую
-class TestAuthService extends AuthService {
-  constructor(
-    public usersService: UsersService,
-    public passwordService: PasswordService,
-    public tokenService: TokenService
-  ) {
-    super(usersService, passwordService, tokenService);
-  }
-}
-
 describe('AuthService', () => {
   let service: AuthService;
-  let usersService: UsersService;
-  let passwordService: PasswordService;
-  let tokenService: TokenService;
 
   // Моки сервисов
   const mockUsersService = {
@@ -49,16 +34,25 @@ describe('AuthService', () => {
     generateAccessToken: vi.fn().mockImplementation(() => 'access-token'),
     generateRefreshToken: vi.fn().mockImplementation(() => 'refresh-token'),
     verifyRefreshToken: vi.fn().mockImplementation(() => null),
+    refreshTokens: vi.fn().mockImplementation(() => null),
+    revokeAllUserTokens: vi.fn().mockImplementation(() => Promise.resolve()),
   } as unknown as TokenService;
+
+  const mockJwtService = {
+    sign: vi.fn().mockImplementation(() => 'jwt-token'),
+    verify: vi.fn().mockImplementation(() => ({ sub: '1' })),
+  } as unknown as JwtService;
 
   beforeEach(async () => {
     // Сброс всех моков перед каждым тестом
     vi.clearAllMocks();
 
-    service = new TestAuthService(mockUsersService, mockPasswordService, mockTokenService);
-    usersService = mockUsersService;
-    passwordService = mockPasswordService;
-    tokenService = mockTokenService;
+    service = new AuthService(
+      mockUsersService,
+      mockJwtService,
+      mockPasswordService,
+      mockTokenService
+    );
   });
 
   it('должен быть определен', () => {

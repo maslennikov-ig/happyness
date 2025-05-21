@@ -1,7 +1,7 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { TokenService } from '../../../modules/auth/services/token.service';
+import { ITokenStorage } from '../../../modules/auth/interfaces/token-storage.interface';
 import { UserRole } from '../../../types';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
@@ -11,7 +11,7 @@ class MockJwtService {
     return `mock-token-${payload.sub}-${options.secret}`;
   }
 
-  verify(token: string, options: any) {
+  verify(token: string) {
     if (token === 'valid-refresh-token') {
       return { sub: '1', email: 'test@example.com', role: UserRole.ENTREPRENEUR };
     }
@@ -32,24 +32,34 @@ class MockConfigService {
   }
 }
 
+// Создаем мок ITokenStorage
+const mockTokenStorage: ITokenStorage = {
+  saveRefreshToken: vi.fn(),
+  findRefreshToken: vi.fn(),
+  needsRotation: vi.fn(),
+  incrementUsageCount: vi.fn(),
+  revokeRefreshToken: vi.fn(),
+  revokeAllUserTokens: vi.fn(),
+  cleanupExpiredTokens: vi.fn(),
+};
+
 // Тестовая реализация TokenService
 class TestTokenService extends TokenService {
   constructor() {
     super(
       new MockJwtService() as unknown as JwtService,
-      new MockConfigService() as unknown as ConfigService
+      new MockConfigService() as unknown as ConfigService,
+      mockTokenStorage
     );
   }
 }
 
 describe('TokenService', () => {
   let service: TokenService;
-  let jwtService: JwtService;
 
   beforeEach(async () => {
     // Создаем тестовую реализацию напрямую
     service = new TestTokenService();
-    jwtService = new MockJwtService() as unknown as JwtService;
   });
 
   it('должен быть определен', () => {

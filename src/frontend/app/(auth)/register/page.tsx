@@ -1,4 +1,5 @@
 import React from 'react';
+import { RegisterForm } from './register-form';
 
 export const metadata = {
   title: 'Регистрация | Happyness',
@@ -6,10 +7,5 @@ export const metadata = {
 };
 
 export default function RegisterPage() {
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Регистрация</h1>
-      <p className="text-muted-foreground">Страница регистрации (заглушка)</p>
-    </div>
-  );
-} 
+  return <RegisterForm />;
+}

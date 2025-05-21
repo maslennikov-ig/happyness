@@ -1,5 +1,5 @@
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { type ClassValue, clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
 /**
  * Объединяет классы с помощью clsx и tailwind-merge
@@ -12,11 +12,11 @@ export function cn(...inputs: ClassValue[]) {
  * Форматирует дату в локализованный формат
  */
 export function formatDate(date: Date | string): string {
-  const d = typeof date === "string" ? new Date(date) : date;
-  return d.toLocaleDateString("ru-RU", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
+  const d = typeof date === 'string' ? new Date(date) : date;
+  return d.toLocaleDateString('ru-RU', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
   });
 }
 
@@ -24,9 +24,9 @@ export function formatDate(date: Date | string): string {
  * Форматирует валюту в рубли
  */
 export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("ru-RU", {
-    style: "currency",
-    currency: "RUB",
+  return new Intl.NumberFormat('ru-RU', {
+    style: 'currency',
+    currency: 'RUB',
     minimumFractionDigits: 0,
   }).format(amount);
 }
@@ -43,8 +43,8 @@ export function truncateText(text: string, maxLength: number): string {
  * Генерирует инициалы из имени
  */
 export function getInitials(name: string): string {
-  if (!name) return "";
-  const parts = name.split(" ");
+  if (!name) return '';
+  const parts = name.split(' ');
   if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
   return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
-} 
+}

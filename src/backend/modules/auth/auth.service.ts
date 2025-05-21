@@ -112,32 +112,24 @@ export class AuthService {
 
   /**
    * Выход из системы
-   * В будущем здесь можно добавить инвалидацию токенов через blacklist
+   * Отзывает все активные refresh токены пользователя
    */
   async logout(userId: string) {
-    // В будущем здесь будет логика для инвалидации токенов пользователя
-    console.warn(`Выход пользователя с ID: ${userId}`);
+    // Отзываем все токены пользователя
+    await this.tokenService.revokeAllUserTokens(userId);
     return { success: true };
   }
 
   /**
-   * Обновление токена доступа
+   * Обновление токена доступа с поддержкой ротации refresh токенов
    */
   async refreshToken(refreshToken: string) {
-    const payload = this.tokenService.verifyRefreshToken(refreshToken);
+    // Используем обновленный TokenService с ротацией токенов
+    const tokens = await this.tokenService.refreshTokens(refreshToken);
 
-    if (!payload) {
+    if (!tokens) {
       throw new UnauthorizedException('Недействительный refresh токен');
     }
-
-    const user = await this.usersService.findById(payload.sub);
-
-    if (!user || !user.isActive) {
-      throw new UnauthorizedException('Пользователь не существует или деактивирован');
-    }
-
-    // Генерируем новую пару токенов
-    const tokens = this.tokenService.generateTokens(user);
 
     return tokens;
   }

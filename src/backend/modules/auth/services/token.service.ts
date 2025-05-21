@@ -1,104 +1,181 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { User, UserRole } from '@/backend/types';
+import { ITokenStorage } from '../interfaces/token-storage.interface';
 
-export interface JwtPayload {
-  sub: string;
+type UserPayload = {
+  id: string;
   email: string;
-  role: UserRole;
-}
+  role?: string;
+};
 
-export interface TokenResponse {
-  accessToken: string;
-  refreshToken: string;
-  expiresIn: number;
-}
-
+/**
+ * Сервис для работы с JWT токенами авторизации
+ */
 @Injectable()
 export class TokenService {
-  private readonly accessTokenExpiration: string;
-  private readonly refreshTokenExpiration: string;
   private readonly accessTokenSecret: string;
   private readonly refreshTokenSecret: string;
+  private readonly accessTokenExpiresIn: string;
+  private readonly refreshTokenExpiresIn: string;
 
   constructor(
     private readonly jwtService: JwtService,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
+    private readonly tokenStorage: ITokenStorage
   ) {
-    this.accessTokenExpiration = configService.get<string>('JWT_ACCESS_EXPIRES_IN') || '15m';
-    this.refreshTokenExpiration = configService.get<string>('JWT_REFRESH_EXPIRES_IN') || '7d';
-    this.accessTokenSecret =
-      configService.get<string>('JWT_ACCESS_SECRET') ||
-      configService.get<string>('JWT_SECRET') ||
-      'your-access-secret-key-change-in-production';
-    this.refreshTokenSecret =
-      configService.get<string>('JWT_REFRESH_SECRET') ||
-      'your-refresh-secret-key-change-in-production';
+    this.accessTokenSecret = this.configService.get<string>('JWT_ACCESS_SECRET');
+    this.refreshTokenSecret = this.configService.get<string>('JWT_REFRESH_SECRET');
+    this.accessTokenExpiresIn = this.configService.get<string>('JWT_ACCESS_EXPIRES_IN') || '15m';
+    this.refreshTokenExpiresIn = this.configService.get<string>('JWT_REFRESH_EXPIRES_IN') || '7d';
   }
 
   /**
-   * Создаёт JWT токен доступа
+   * Генерирует пару токенов (access + refresh) для пользователя
    */
-  generateAccessToken(user: Partial<User>): string {
-    const payload: JwtPayload = {
-      sub: user.id,
-      email: user.email,
-      role: user.role,
-    };
+  generateTokens(user: UserPayload) {
+    const accessToken = this.generateAccessToken(user);
+    const refreshToken = this.generateRefreshToken(user);
 
-    return this.jwtService.sign(payload, {
-      secret: this.accessTokenSecret,
-      expiresIn: this.accessTokenExpiration,
-    });
-  }
+    const expiresIn = this.parseExpiresIn(this.accessTokenExpiresIn);
+    const expiresAt = this.calculateExpiresAt(this.refreshTokenExpiresIn);
 
-  /**
-   * Создаёт JWT refresh токен
-   */
-  generateRefreshToken(user: Partial<User>): string {
-    const payload: JwtPayload = {
-      sub: user.id,
-      email: user.email,
-      role: user.role,
-    };
+    // Сохраняем refresh токен в хранилище
+    this.tokenStorage.saveRefreshToken(user.id, refreshToken, expiresAt);
 
-    return this.jwtService.sign(payload, {
-      secret: this.refreshTokenSecret,
-      expiresIn: this.refreshTokenExpiration,
-    });
-  }
-
-  /**
-   * Генерирует пару токенов (access и refresh)
-   */
-  generateTokens(user: Partial<User>): TokenResponse {
     return {
-      accessToken: this.generateAccessToken(user),
-      refreshToken: this.generateRefreshToken(user),
-      expiresIn: this.getExpirationTime(this.accessTokenExpiration),
+      accessToken,
+      refreshToken,
+      expiresIn,
     };
   }
 
   /**
-   * Верифицирует refresh токен и возвращает payload
+   * Генерирует access токен для пользователя
    */
-  verifyRefreshToken(token: string): JwtPayload {
+  generateAccessToken(user: UserPayload): string {
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+    };
+
+    const token = this.jwtService.sign(payload, {
+      secret: this.accessTokenSecret,
+      expiresIn: this.accessTokenExpiresIn,
+    });
+
+    return token;
+  }
+
+  /**
+   * Генерирует refresh токен для пользователя
+   */
+  generateRefreshToken(user: UserPayload): string {
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+    };
+
+    const token = this.jwtService.sign(payload, {
+      secret: this.refreshTokenSecret,
+      expiresIn: this.refreshTokenExpiresIn,
+    });
+
+    return token;
+  }
+
+  /**
+   * Проверяет валидность refresh токена
+   * Возвращает payload токена или null, если токен невалиден
+   */
+  verifyRefreshToken(token: string): { sub: string; email: string; role: string } | null {
     try {
-      return this.jwtService.verify(token, {
+      const payload = this.jwtService.verify(token, {
         secret: this.refreshTokenSecret,
       });
-    } catch {
+
+      return payload;
+    } catch (error) {
       return null;
     }
   }
 
   /**
-   * Вычисляет время истечения срока действия токена в секундах
+   * Обновляет токены с учетом ротации refresh-токенов
    */
-  private getExpirationTime(expiresIn: string): number {
-    const match = expiresIn.match(/^(\d+)([smhd])$/);
-    if (!match) return 900; // По умолчанию 15 минут в секундах
+  async refreshTokens(oldRefreshToken: string) {
+    // Проверяем валидность токена на уровне JWT
+    const payload = this.verifyRefreshToken(oldRefreshToken);
+    if (!payload) {
+      return null;
+    }
+
+    // Проверяем существование токена в хранилище
+    const tokenRecord = await this.tokenStorage.findRefreshToken(oldRefreshToken);
+    if (!tokenRecord) {
+      return null;
+    }
+
+    // Увеличиваем счетчик использования токена
+    const usageCount = await this.tokenStorage.incrementUsageCount(tokenRecord.id);
+
+    // Проверяем, нужно ли ротировать токен
+    const needsRotation = this.tokenStorage.needsRotation(usageCount);
+
+    // Генерируем новый access token
+    const accessToken = this.generateAccessToken({
+      id: tokenRecord.user.id,
+      email: tokenRecord.user.email,
+      role: tokenRecord.user.role,
+    });
+
+    // Если ротация не требуется, возвращаем тот же refresh token
+    if (!needsRotation) {
+      return {
+        accessToken,
+        refreshToken: oldRefreshToken,
+        expiresIn: this.parseExpiresIn(this.accessTokenExpiresIn),
+      };
+    }
+
+    // Если ротация нужна, отзываем старый токен и создаем новый
+    await this.tokenStorage.revokeRefreshToken(oldRefreshToken);
+
+    // Генерируем новый refresh token
+    const refreshToken = this.generateRefreshToken({
+      id: tokenRecord.user.id,
+      email: tokenRecord.user.email,
+      role: tokenRecord.user.role,
+    });
+
+    // Сохраняем новый refresh token
+    const expiresAt = this.calculateExpiresAt(this.refreshTokenExpiresIn);
+    await this.tokenStorage.saveRefreshToken(tokenRecord.user.id, refreshToken, expiresAt);
+
+    return {
+      accessToken,
+      refreshToken,
+      expiresIn: this.parseExpiresIn(this.accessTokenExpiresIn),
+    };
+  }
+
+  /**
+   * Отзывает все токены пользователя
+   */
+  async revokeAllUserTokens(userId: string): Promise<void> {
+    await this.tokenStorage.revokeAllUserTokens(userId);
+  }
+
+  /**
+   * Парсит строку с временем истечения токена в секунды
+   */
+  private parseExpiresIn(expiresIn: string): number {
+    const match = expiresIn.match(/^(\d+)([smhdw])$/);
+    if (!match) {
+      return 900; // Возвращаем значение по умолчанию (15 минут)
+    }
 
     const value = parseInt(match[1], 10);
     const unit = match[2];
@@ -112,8 +189,20 @@ export class TokenService {
         return value * 60 * 60;
       case 'd':
         return value * 60 * 60 * 24;
+      case 'w':
+        return value * 60 * 60 * 24 * 7;
       default:
         return 900;
     }
+  }
+
+  /**
+   * Вычисляет дату истечения токена на основе строки expiresIn
+   */
+  private calculateExpiresAt(expiresIn: string): Date {
+    const seconds = this.parseExpiresIn(expiresIn);
+    const expiresAt = new Date();
+    expiresAt.setSeconds(expiresAt.getSeconds() + seconds);
+    return expiresAt;
   }
 }

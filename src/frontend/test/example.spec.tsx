@@ -1,5 +1,10 @@
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+/**
+ * @vitest-environment jsdom
+ */
+
+import React from 'react';
+import { render, fireEvent, cleanup } from '@testing-library/react';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 
 // Пример простого компонента для тестирования
 const ExampleButton = ({
@@ -17,17 +22,22 @@ const ExampleButton = ({
 );
 
 describe('ExampleButton компонент (модульный)', () => {
+  // Очищаем DOM после каждого теста
+  afterEach(() => {
+    cleanup();
+  });
+
   // Базовый тест на рендеринг
   it('корректно рендерится с дефолтным текстом', () => {
     // Arrange
     const handleClick = vi.fn();
 
     // Act
-    render(<ExampleButton onClick={handleClick} />);
+    const { getByTestId, getByText } = render(<ExampleButton onClick={handleClick} />);
 
     // Assert
-    expect(screen.getByTestId('example-button')).toBeInTheDocument();
-    expect(screen.getByText('Нажать')).toBeInTheDocument();
+    expect(getByTestId('example-button')).toBeDefined();
+    expect(getByText('Нажать')).toBeDefined();
   });
 
   // Тест с пользовательским текстом
@@ -36,10 +46,10 @@ describe('ExampleButton компонент (модульный)', () => {
     const handleClick = vi.fn();
 
     // Act
-    render(<ExampleButton onClick={handleClick}>Отправить</ExampleButton>);
+    const { getByText } = render(<ExampleButton onClick={handleClick}>Отправить</ExampleButton>);
 
     // Assert
-    expect(screen.getByText('Отправить')).toBeInTheDocument();
+    expect(getByText('Отправить')).toBeDefined();
   });
 
   // Тест на обработку клика
@@ -48,8 +58,8 @@ describe('ExampleButton компонент (модульный)', () => {
     const handleClick = vi.fn();
 
     // Act
-    render(<ExampleButton onClick={handleClick} />);
-    fireEvent.click(screen.getByTestId('example-button'));
+    const { getByTestId } = render(<ExampleButton onClick={handleClick} />);
+    fireEvent.click(getByTestId('example-button'));
 
     // Assert
     expect(handleClick).toHaveBeenCalledTimes(1);
@@ -61,11 +71,11 @@ describe('ExampleButton компонент (модульный)', () => {
     const handleClick = vi.fn();
 
     // Act
-    render(<ExampleButton onClick={handleClick} disabled={true} />);
-    fireEvent.click(screen.getByTestId('example-button'));
+    const { getByTestId } = render(<ExampleButton onClick={handleClick} disabled={true} />);
+    fireEvent.click(getByTestId('example-button'));
 
     // Assert
     expect(handleClick).not.toHaveBeenCalled();
-    expect(screen.getByTestId('example-button')).toBeDisabled();
+    expect(getByTestId('example-button').hasAttribute('disabled')).toBe(true);
   });
 });

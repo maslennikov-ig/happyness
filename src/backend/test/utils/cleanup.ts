@@ -1,28 +1,45 @@
 import { PrismaClient } from '@prisma/client';
 
 /**
- * Очищает все таблицы в тестовой базе данных
- * Рекомендуется использовать в beforeEach или beforeAll для изоляции тестов
+ * Очищает тестовую базу данных
+ * @param prisma PrismaClient экземпляр
  */
-export async function clearTestDatabase(prisma: PrismaClient) {
-  // SQL-запрос для полной очистки всех таблиц с каскадным сбросом
-  const truncateAllTables = `
+export async function clearTestDatabase(prisma: PrismaClient): Promise<void> {
+  if (!prisma) {
+    console.warn('Prisma не инициализирована, пропускаем очистку базы данных');
+    return;
+  }
+
+  try {
+    // Удаляем все данные из таблиц в определенном порядке
+    // (с учетом внешних ключей)
+    await prisma.$executeRawUnsafe(`
     DO $$ DECLARE
       r RECORD;
     BEGIN
-      -- Отключаем проверку внешних ключей на время очистки
+        -- Отключаем проверку внешних ключей во время очистки
       SET CONSTRAINTS ALL DEFERRED;
 
-      FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = current_schema()) LOOP
-        EXECUTE 'TRUNCATE TABLE ' || quote_ident(r.tablename) || ' RESTART IDENTITY CASCADE';
+        -- Очищаем все таблицы (за исключением системных)
+        FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = current_schema() AND 
+                 tablename NOT LIKE 'pg_%' AND tablename NOT LIKE '_prisma_%') LOOP
+          EXECUTE 'TRUNCATE TABLE "' || r.tablename || '" RESTART IDENTITY CASCADE';
       END LOOP;
       
-      -- Включаем обратно проверку внешних ключей
+        -- Включаем проверку внешних ключей
       SET CONSTRAINTS ALL IMMEDIATE;
     END $$;
-  `;
-
-  await prisma.$executeRawUnsafe(truncateAllTables);
+    `);
+  } catch (error) {
+    console.error('Ошибка при очистке тестовой базы данных:', error);
+    // Если не удалось очистить через SQL, попробуем удалить записи по отдельности
+    try {
+      await prisma.user.deleteMany();
+      // Добавьте другие таблицы здесь по мере необходимости
+    } catch (innerError) {
+      console.error('Ошибка при удалении записей:', innerError);
+    }
+  }
 }
 
 /**

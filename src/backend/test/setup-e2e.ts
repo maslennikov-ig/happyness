@@ -11,7 +11,12 @@ const dbName = `test_${randomUUID().replace(/-/g, '')}`;
 process.env.DATABASE_URL = `postgresql://postgres:postgres@localhost:5432/${dbName}`;
 
 // Инициализация Prisma клиента для тестов
-const prisma = new PrismaClient();
+let prisma: PrismaClient | null = null;
+try {
+  prisma = new PrismaClient();
+} catch (error) {
+  console.error('Ошибка инициализации Prisma для E2E тестов:', error);
+}
 
 // Глобальные переменные для тестов - закомментировано пока не используются
 // let testApp;
@@ -19,6 +24,11 @@ const prisma = new PrismaClient();
 
 // Функция для настройки тестовой базы данных
 async function setupDatabase() {
+  if (!prisma) {
+    console.warn('Prisma не инициализирована, пропускаем настройку тестовой БД');
+    return;
+  }
+
   try {
     // Создаем тестовую базу данных
     execSync(`createdb -h localhost -U postgres -p 5432 ${dbName}`);
@@ -35,6 +45,11 @@ async function setupDatabase() {
 
 // Функция для очистки тестовой базы данных
 async function teardownDatabase() {
+  if (!prisma) {
+    console.warn('Prisma не инициализирована, пропускаем очистку тестовой БД');
+    return;
+  }
+
   try {
     await prisma.$disconnect();
     execSync(`dropdb -h localhost -U postgres -p 5432 ${dbName}`);

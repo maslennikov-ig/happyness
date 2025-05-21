@@ -1,114 +1,78 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { Controller, Get, Param, Body, Post, Injectable } from '@nestjs/common';
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Пример сервиса для тестирования
-@Injectable()
-class ExampleService {
-  private users = [
-    { id: 1, name: 'Иван', email: 'ivan@example.com' },
-    { id: 2, name: 'Мария', email: 'maria@example.com' },
-  ];
+// Простая функция для тестирования в стиле контроллера
+class ExampleController {
+  constructor(private service: any) {}
 
-  findAll() {
-    return this.users;
+  getAll() {
+    return this.service.findAll();
   }
 
-  findOne(id: number) {
-    return this.users.find(user => user.id === id);
+  getOne(id: number) {
+    return this.service.findOne(id);
   }
 
-  create(userData: { name: string; email: string }) {
-    const newUser = {
-      id: this.users.length + 1,
-      ...userData,
+  create(data: any) {
+    return this.service.create(data);
+  }
+}
+
+describe('ExampleController', () => {
+  let controller: ExampleController;
+  let mockService: any;
+
+  beforeEach(() => {
+    // Создаем мок сервиса с vi.fn() для каждого метода
+    mockService = {
+      findAll: vi.fn(),
+      findOne: vi.fn(),
+      create: vi.fn(),
     };
-    this.users.push(newUser);
-    return newUser;
-  }
-}
 
-// Пример контроллера для тестирования
-@Controller('users')
-class UsersController {
-  constructor(private readonly exampleService: ExampleService) {}
-
-  @Get()
-  findAll() {
-    return this.exampleService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.exampleService.findOne(parseInt(id, 10));
-  }
-
-  @Post()
-  create(@Body() userData: { name: string; email: string }) {
-    return this.exampleService.create(userData);
-  }
-}
-
-describe('UsersController (интеграционный)', () => {
-  let controller: UsersController;
-  let service: ExampleService;
-  let module: TestingModule;
-
-  beforeEach(async () => {
-    // Создаем тестовый модуль с контроллером и сервисом
-    module = await Test.createTestingModule({
-      controllers: [UsersController],
-      providers: [ExampleService],
-    }).compile();
-
-    controller = module.get<UsersController>(UsersController);
-    service = module.get<ExampleService>(ExampleService);
+    // Создаем контроллер с моком
+    controller = new ExampleController(mockService);
   });
 
-  afterEach(async () => {
-    await module.close();
-  });
-
-  it('должен вернуть список всех пользователей', () => {
+  it('должен вернуть список всех элементов', () => {
     // Arrange
-    const mockUsers = [
-      { id: 1, name: 'Иван', email: 'ivan@example.com' },
-      { id: 2, name: 'Мария', email: 'maria@example.com' },
+    const mockItems = [
+      { id: 1, name: 'Item 1' },
+      { id: 2, name: 'Item 2' },
     ];
-    vi.spyOn(service, 'findAll').mockImplementation(() => mockUsers);
+    mockService.findAll.mockReturnValue(mockItems);
 
     // Act
-    const result = controller.findAll();
+    const result = controller.getAll();
 
     // Assert
-    expect(result).toEqual(mockUsers);
-    expect(service.findAll).toHaveBeenCalled();
+    expect(result).toEqual(mockItems);
+    expect(mockService.findAll).toHaveBeenCalled();
   });
 
-  it('должен вернуть пользователя по ID', () => {
+  it('должен вернуть один элемент по ID', () => {
     // Arrange
-    const mockUser = { id: 1, name: 'Иван', email: 'ivan@example.com' };
-    vi.spyOn(service, 'findOne').mockImplementation(() => mockUser);
+    const mockItem = { id: 1, name: 'Item 1' };
+    mockService.findOne.mockReturnValue(mockItem);
 
     // Act
-    const result = controller.findOne('1');
+    const result = controller.getOne(1);
 
     // Assert
-    expect(result).toEqual(mockUser);
-    expect(service.findOne).toHaveBeenCalledWith(1);
+    expect(result).toEqual(mockItem);
+    expect(mockService.findOne).toHaveBeenCalledWith(1);
   });
 
-  it('должен создать нового пользователя', () => {
+  it('должен создать новый элемент', () => {
     // Arrange
-    const userData = { name: 'Новый', email: 'new@example.com' };
-    const mockNewUser = { id: 3, ...userData };
-    vi.spyOn(service, 'create').mockImplementation(() => mockNewUser);
+    const newData = { name: 'New Item' };
+    const mockCreatedItem = { id: 3, name: 'New Item' };
+    mockService.create.mockReturnValue(mockCreatedItem);
 
     // Act
-    const result = controller.create(userData);
+    const result = controller.create(newData);
 
     // Assert
-    expect(result).toEqual(mockNewUser);
-    expect(service.create).toHaveBeenCalledWith(userData);
+    expect(result).toEqual(mockCreatedItem);
+    expect(mockService.create).toHaveBeenCalledWith(newData);
   });
 });

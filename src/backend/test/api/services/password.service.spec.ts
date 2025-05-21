@@ -1,8 +1,6 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { PasswordService } from '../../../modules/auth/services/password.service';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import * as argon2 from 'argon2';
 
 // Мок ConfigService для использования в тестах
 class MockConfigService {

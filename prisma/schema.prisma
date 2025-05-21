@@ -12,35 +12,54 @@ datasource db {
 
 // Модель пользователя
 model User {
-  id               String          @id @default(uuid())
-  email            String          @unique
+  id               String            @id @default(uuid())
+  email            String            @unique
   name             String?
   password         String
-  role             UserRole        @default(ENTREPRENEUR)
+  role             UserRole          @default(ENTREPRENEUR)
   phone            String?
   avatar           String?
-  isActive         Boolean         @default(true)
+  isActive         Boolean           @default(true)
   lastLoginAt      DateTime?
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
   deletedAt        DateTime?
   projects         Project[]
   requests         Request[]
   contractor       Contractor?
   notifications    Notification[]
-  sentMessages     Message[]       @relation("MessageSender")
-  receivedMessages Message[]       @relation("MessageReceiver")
+  sentMessages     Message[]         @relation("MessageSender")
+  receivedMessages Message[]         @relation("MessageReceiver")
   documents        Document[]
-  reviews          Review[]        @relation("ReviewAuthor")
-  receivedReviews  Review[]        @relation("ReviewTarget")
+  reviews          Review[]          @relation("ReviewAuthor")
+  receivedReviews  Review[]          @relation("ReviewTarget")
   portfolioItems   PortfolioItem[]
   paymentMethods   PaymentMethod[]
   transactions     Transaction[]
   activities       ActivityLog[]
+  refreshTokens    UserRefreshToken[] // Связь с токенами пользователя
 
   @@index([email])
   @@index([role])
   @@index([isActive])
+}
+
+// Модель для хранения refresh токенов с ротацией
+model UserRefreshToken {
+  id         String    @id @default(uuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token      String    @unique
+  expiresAt  DateTime
+  isRevoked  Boolean   @default(false)
+  usageCount Int       @default(0)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+  @@index([isRevoked])
 }
 
 // Роли пользователей
