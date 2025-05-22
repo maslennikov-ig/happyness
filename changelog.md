@@ -1,5 +1,19 @@
 # Changelog
 
+## 2025-05-22
+
+- Удалён устаревший атрибут `version` из `docker-compose.yml` (устранено предупреждение Docker Compose).
+- В `docker/Dockerfile.backend`:
+  - Заменён `RUN npm ci --only=production` на `RUN npm ci --omit=dev`, добавлен retry (`|| npm ci --omit=dev`).
+  - Добавлен `ENV npm_config_legacy_peer_deps=true` для обхода peer dependency конфликтов.
+- В `src/backend/package.json` обновлена зависимость `multer` до безопасной версии `^2.0.0` (устранена уязвимость и предупреждение npm).
+- Все изменения внесены с учётом структуры и рекомендаций из `README.md`. (Проверено CTO, не нарушает стандарты проекта)
+
+- Добавлен vite.config.ts в frontend с поддержкой алиасов через vite-tsconfig-paths для корректной работы import '@/...' в тестах и Vitest.
+
+- Исправлены все тесты для ProjectRepository: id и ownerId теперь передаются как строки (id.toString()), чтобы устранить ошибки типов TS2345 ("Argument of type 'number' is not assignable to parameter of type 'string'").
+- Исправлены тесты: findByOwnerId, updateStatus, softDelete, restore, findByIdWithDetails, getUserProjectStats.
+
 Все значимые изменения в проекте будут документироваться в этом файле.
 
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.0.0/),
@@ -7,7 +21,30 @@
 
 ## [Unreleased]
 
+### Изменено
+
+- Документация и инфраструктура обновлены: основной порт фронта теперь 3100, исправлены инструкции, CORS_ORIGIN, healthcheck, локали для postgres, next.config.js и e2e README, все ссылки и примеры приведены к актуальному виду.
+
+### Исправлено
+
+- Добавлены .eslintignore и .gitignore в src/frontend, теперь директория dist/types исключена из линтинга и git.
+- Удалены ошибки и предупреждения линтера, связанные с неиспользуемыми переменными в тестах (register-form-integration.test.tsx, register-form-validation.test.tsx, setup-dom.ts, setup.ts).
+- dist/types/app и dist/types/cache-life.d.ts больше не вызывают ошибок линтера, так как игнорируются.
+
 ### Добавлено
+
+- Рефакторинг зависимостей в проекте:
+
+  - **Бэкенд (backend/package.json)**:
+    - Удалены фронтендовые зависимости (next, react, react-dom, tailwind-merge, clsx)
+    - Добавлена недостающая зависимость zod
+  - **Фронтенд (frontend/package.json)**:
+    - Добавлены недостающие зависимости: zod, @hookform/resolvers, react-hook-form, lucide-react
+    - Оптимизирована секция overrides, оставлены только ключевые зависимости
+  - **Корневой package.json**:
+    - Обновлена секция overrides, удалены дублирующиеся зависимости
+    - Оставлены только ключевые зависимости, влияющие на работу всего приложения
+  - Обеспечена согласованность версий между всеми частями проекта для предотвращения конфликтов зависимостей
 
 - Реализована базовая система аутентификации:
   - Доработаны API-эндпоинты для регистрации, входа, выхода из системы и обновления токенов

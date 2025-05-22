@@ -90,6 +90,8 @@ npm run build
 npm start
 ```
 
+> **Важно:** основной порт фронтенда теперь 3100 (ранее был 3000).
+
 ### Запуск с использованием Docker
 
 ```bash
@@ -97,7 +99,7 @@ npm start
 docker build -t happyness .
 
 # Запуск контейнера
-docker run -p 3000:3000 -p 3001:3001 happyness
+docker run -p 3100:3100 -p 3001:3001 happyness
 ```
 
 ### Запуск с использованием Docker Compose

@@ -25,7 +25,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Экспорт порта для Next.js
-EXPOSE 3000
+EXPOSE 3100
 
 # Команда для запуска Next.js в режиме разработки с горячей перезагрузкой
 CMD ["npm", "run", "dev"]
@@ -55,7 +55,7 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 
 # Экспорт порта для Next.js
-EXPOSE 3000
+EXPOSE 3100
 
 # Команда для запуска Next.js в production режиме
 CMD ["npm", "run", "start"] 

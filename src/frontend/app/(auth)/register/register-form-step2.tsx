@@ -1,3 +1,4 @@
+'use client';
 import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -32,7 +33,6 @@ export function RegisterFormStep2({
   isLoading = false,
 }: RegisterFormStep2Props) {
   const form = useForm<RegisterStep2FormValues>({
-    // @ts-ignore - обходим проблему с бесконечной глубиной типизации
     resolver: zodResolver(registerStep2Schema),
     defaultValues,
   });

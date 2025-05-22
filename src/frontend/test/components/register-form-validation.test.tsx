@@ -19,7 +19,7 @@ vi.mock('react-hook-form', () => {
         onChange: vi.fn(),
         onBlur: vi.fn(),
       })),
-      handleSubmit: vi.fn(_onValid => (e: React.FormEvent<HTMLFormElement>) => {
+      handleSubmit: vi.fn(() => (e: React.FormEvent<HTMLFormElement>) => {
         e?.preventDefault?.();
         // Не вызываем onValid, чтобы симулировать ошибки валидации
         return false;
@@ -87,7 +87,7 @@ vi.mock('@/components/ui/form', () => {
       };
       return React.createElement('form', formProps, children);
     },
-    FormField: ({ _control, name, render }: any) =>
+    FormField: ({ name, render }: any) =>
       render({ field: { name, id: name, onChange: vi.fn(), value: '' } }),
     FormItem: ({ children }: { children: React.ReactNode }) =>
       React.createElement('div', {}, children),

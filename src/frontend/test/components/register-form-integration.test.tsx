@@ -2,7 +2,6 @@ import * as React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { RegisterForm } from '../../app/(auth)/register/register-form';
-import { authApi } from '@/lib/api/auth';
 
 // Мокируем модули для тестирования
 vi.mock('@/lib/api/auth', () => ({

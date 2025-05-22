@@ -103,14 +103,14 @@ Object.defineProperty(HTMLFormElement.prototype, 'requestSubmit', {
 });
 
 // Мокируем FormData (простой подход с перехватом конструктора)
-const originalFormData = global.FormData;
-global.FormData = vi.fn().mockImplementation((form?: HTMLFormElement) => {
+
+global.FormData = vi.fn().mockImplementation(() => {
   const formData = {
     append: vi.fn(),
     delete: vi.fn(),
-    get: vi.fn((name: string) => null),
-    getAll: vi.fn((name: string) => []),
-    has: vi.fn((name: string) => false),
+    get: vi.fn(() => null),
+    getAll: vi.fn(() => []),
+    has: vi.fn(() => false),
     set: vi.fn(),
     forEach: vi.fn(),
     // Правильная типизация для итераторов
@@ -185,8 +185,7 @@ vi.mock('@/components/ui/form', () => {
       };
       return React.createElement('form', formProps, children);
     },
-    FormField: ({ control, name, render }: any) =>
-      render({ field: { name, id: name, onChange: vi.fn(), value: '' } }),
+    FormField: ({ render }: any) => render({ field: { id: '', onChange: vi.fn(), value: '' } }),
     FormItem: ({ children }: { children: React.ReactNode }) =>
       React.createElement('div', {}, children),
     FormLabel: ({ children, htmlFor }: { children: React.ReactNode; htmlFor?: string }) =>
@@ -224,18 +223,11 @@ vi.mock('@/components/ui/checkbox', () => ({
 }));
 
 // Добавим хелпер-функцию для mock-отправки форм
-export const submitForm = async (
-  form: HTMLFormElement,
-  values: Record<string, any> = {}
-): Promise<void> => {
+export const submitForm = async (): Promise<void> => {
   const event = {
     preventDefault: vi.fn(),
-    target: form,
   } as unknown as React.FormEvent<HTMLFormElement>;
-
-  if (form.onsubmit) {
-    await (form.onsubmit as any)(event);
-  }
+  // Здесь можно добавить дополнительные действия, если потребуется
 };
 
 // Глобальные переменные

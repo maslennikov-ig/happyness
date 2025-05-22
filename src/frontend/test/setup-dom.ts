@@ -40,7 +40,7 @@ global.HTMLElement.prototype.getBoundingClientRect = vi.fn(() => ({
 
 // Исправления для ResizeObserver и IntersectionObserver
 global.ResizeObserver = class ResizeObserver {
-  constructor(callback: ResizeObserverCallback) {}
+  constructor() {}
   observe() {
     return null;
   }
@@ -57,7 +57,7 @@ global.IntersectionObserver = class IntersectionObserver {
   rootMargin: string = '0px';
   thresholds: ReadonlyArray<number> = [0];
 
-  constructor(callback: IntersectionObserverCallback) {}
+  constructor() {}
   observe(): void {}
   unobserve(): void {}
   disconnect(): void {}

@@ -17,7 +17,7 @@ npx playwright test src/frontend/test/e2e
 import { test, expect } from '@playwright/test';
 
 test('отображает заголовок', async ({ page }) => {
-  await page.goto('http://localhost:3000/');
+  await page.goto('http://localhost:3100/');
   await expect(page.locator('h1')).toBeVisible();
 });
 ```

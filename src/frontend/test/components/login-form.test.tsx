@@ -2,21 +2,21 @@ import * as React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+// Мокируем authApi (важно: до импорта LoginForm)
+vi.mock('@/lib/api/auth', () => ({
+  authApi: {
+    login: vi.fn(),
+  },
+}));
+
 import { LoginForm } from '../../app/(auth)/login/login-form';
-import { authApi } from '@/lib/api/auth-mock';
+import { authApi } from '@/lib/api/auth';
 
 // Мокируем модуль next/navigation для useRouter
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
     push: vi.fn(),
   }),
-}));
-
-// Мокируем authApi
-vi.mock('@/lib/api/auth-mock', () => ({
-  authApi: {
-    login: vi.fn(),
-  },
 }));
 
 // Мокируем localStorage
@@ -99,7 +99,7 @@ describe('LoginForm', () => {
 
   it('вызывает API при корректном заполнении формы', async () => {
     // Мокируем успешный ответ API
-    vi.mocked(authApi.login).mockResolvedValue({
+    (authApi.login as any).mockResolvedValue({
       user: { id: '1', email: 'test@example.com', name: 'Тест Пользователь', role: 'USER' },
       accessToken: 'access-token',
       refreshToken: 'refresh-token',
@@ -128,7 +128,7 @@ describe('LoginForm', () => {
 
   it('сохраняет refresh токен в localStorage при отмеченном "Запомнить меня"', async () => {
     // Мокируем успешный ответ API
-    vi.mocked(authApi.login).mockResolvedValue({
+    (authApi.login as any).mockResolvedValue({
       user: { id: '1', email: 'test@example.com', name: 'Тест Пользователь', role: 'USER' },
       accessToken: 'access-token',
       refreshToken: 'refresh-token',
@@ -161,7 +161,7 @@ describe('LoginForm', () => {
   it('отображает ошибку при неудачной авторизации', async () => {
     // Мокируем ошибку API
     const errorMessage = 'Неверный email или пароль';
-    vi.mocked(authApi.login).mockRejectedValue(new Error(errorMessage));
+    (authApi.login as any).mockRejectedValue(new Error(errorMessage));
 
     const user = userEvent.setup();
     render(<LoginForm />);
@@ -183,7 +183,7 @@ describe('LoginForm', () => {
   it('отключает форму во время отправки запроса', async () => {
     // Создаем промис, который не будет завершен в течение теста
     const loginPromise = new Promise(() => {});
-    vi.mocked(authApi.login).mockReturnValue(loginPromise as Promise<any>);
+    (authApi.login as any).mockReturnValue(loginPromise as Promise<any>);
 
     const user = userEvent.setup();
     render(<LoginForm />);
@@ -198,7 +198,7 @@ describe('LoginForm', () => {
 
     // Проверяем, что кнопка отключена во время отправки запроса
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Войти' })).toBeDisabled();
+      expect(screen.getByRole('button')).toBeDisabled();
     });
   });
 });

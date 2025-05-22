@@ -5,7 +5,7 @@ import { ModuleRegistry } from './module-registry';
 import { ModuleValidator } from './module-validator';
 import { IModule } from '../interfaces';
 import { BaseModule } from './base-module';
-import { CoreModuleOptions } from '../module.module';
+import { CoreModuleOptions } from './core.module';
 
 /**
  * Сервис для загрузки модулей системы

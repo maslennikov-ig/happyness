@@ -1,3 +1,4 @@
+'use client';
 import * as React from 'react';
 import { useState } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
@@ -6,7 +7,7 @@ import { loginSchema, type LoginFormValues } from '@/lib/validations/auth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { authApi } from '@/lib/api/auth';
-
+import { Resolver } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -30,8 +31,8 @@ function useLoginForm(
   }
 ) {
   return useForm<LoginFormValues>({
-    // @ts-ignore - обходим проблему с бесконечной глубиной типизации
-    resolver: zodResolver(loginSchema),
+    // Используем явное приведение типа для resolver, чтобы избежать проблем с глубиной типизации
+    resolver: zodResolver(loginSchema) as Resolver<LoginFormValues>,
     defaultValues,
   });
 }
@@ -58,8 +59,14 @@ export function LoginForm() {
 
       // Перенаправляем на главную страницу
       router.push('/dashboard');
-    } catch (err: any) {
-      setError(err.message || 'Произошла ошибка при входе');
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else if (typeof err === 'string') {
+        setError(err);
+      } else {
+        setError('Ошибка входа в систему');
+      }
     } finally {
       setIsLoading(false);
     }

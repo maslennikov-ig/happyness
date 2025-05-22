@@ -17,7 +17,8 @@ RUN apk add --no-cache python3 make g++ postgresql-client
 COPY package*.json ./
 
 # Установка зависимостей (без devDependencies)
-RUN npm ci --only=production
+ENV npm_config_legacy_peer_deps=true
+RUN npm ci --omit=dev || npm ci --omit=dev
 
 # Установка argon2 для хеширования паролей
 RUN npm install argon2

@@ -39,14 +39,14 @@ describe('ProjectRepository', () => {
 
   describe('findByOwnerId', () => {
     it('должен возвращать проекты по ID владельца', async () => {
-      const ownerId = 1;
+      const ownerId = 1; // number, но репозиторий ждёт string
       const mockProjects = [
         { id: 1, title: 'Project 1', ownerId },
         { id: 2, title: 'Project 2', ownerId },
       ];
       mockPrismaService.project.findMany.mockResolvedValue(mockProjects);
 
-      const result = await repository.findByOwnerId(ownerId);
+      const result = await repository.findByOwnerId(ownerId.toString());
 
       expect(mockPrismaService.project.findMany).toHaveBeenCalledWith({
         where: { ownerId },
@@ -102,7 +102,7 @@ describe('ProjectRepository', () => {
       const updatedProject = { id, title: 'Project', status };
       mockPrismaService.project.update.mockResolvedValue(updatedProject);
 
-      const result = await repository.updateStatus(id, status);
+      const result = await repository.updateStatus(id.toString(), status);
 
       expect(mockPrismaService.project.update).toHaveBeenCalledWith({
         where: { id },
@@ -122,7 +122,7 @@ describe('ProjectRepository', () => {
       };
       mockPrismaService.project.update.mockResolvedValue(updatedProject);
 
-      const result = await repository.updateStatus(id, status);
+      const result = await repository.updateStatus(id.toString(), status);
 
       expect(mockPrismaService.project.update).toHaveBeenCalledWith({
         where: { id },
@@ -141,7 +141,7 @@ describe('ProjectRepository', () => {
       const deletedProject = { id, title: 'Project', deletedAt: new Date() };
       mockPrismaService.project.update.mockResolvedValue(deletedProject);
 
-      const result = await repository.softDelete(id);
+      const result = await repository.softDelete(id.toString());
 
       expect(mockPrismaService.project.update).toHaveBeenCalledWith({
         where: { id },
@@ -157,7 +157,7 @@ describe('ProjectRepository', () => {
       const restoredProject = { id, title: 'Project', deletedAt: null };
       mockPrismaService.project.update.mockResolvedValue(restoredProject);
 
-      const result = await repository.restore(id);
+      const result = await repository.restore(id.toString());
 
       expect(mockPrismaService.project.update).toHaveBeenCalledWith({
         where: { id },
@@ -218,7 +218,7 @@ describe('ProjectRepository', () => {
       };
       mockPrismaService.project.findUnique.mockResolvedValue(mockProject);
 
-      const result = await repository.findByIdWithDetails(id);
+      const result = await repository.findByIdWithDetails(id.toString());
 
       expect(mockPrismaService.project.findUnique).toHaveBeenCalledWith({
         where: { id },
@@ -294,7 +294,7 @@ describe('ProjectRepository', () => {
         return Promise.resolve(0);
       });
 
-      const result = await repository.getUserProjectStats(userId);
+      const result = await repository.getUserProjectStats(userId.toString());
 
       expect(mockPrismaService.project.count).toHaveBeenCalledTimes(4);
       expect(result).toEqual({

@@ -1,13 +1,33 @@
 import { Injectable } from '@nestjs/common';
-import { Project, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { BaseRepository } from './base.repository';
 import { PrismaService } from '../prisma.service';
+
+// Определяем тип Project на основе модели из схемы Prisma
+type Project = {
+  id: string;
+  title: string;
+  description?: string | null;
+  status: string;
+  budget?: number | null;
+  startDate?: Date | null;
+  endDate?: Date | null;
+  completedAt?: Date | null;
+  priority: string;
+  tags: string[];
+  visibility: string;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt?: Date | null;
+  ownerId: string;
+  contractorId?: string | null;
+};
 
 /**
  * Репозиторий для работы с проектами
  */
 @Injectable()
-export class ProjectRepository extends BaseRepository<Project, number> {
+export class ProjectRepository extends BaseRepository<Project, string> {
   protected readonly model = 'project';
 
   constructor(protected readonly prisma: PrismaService) {
@@ -19,7 +39,7 @@ export class ProjectRepository extends BaseRepository<Project, number> {
    * @param ownerId ID владельца проекта
    * @returns Массив проектов
    */
-  async findByOwnerId(ownerId: number): Promise<Project[]> {
+  async findByOwnerId(ownerId: string): Promise<Project[]> {
     return this.findAll({ where: { ownerId } });
   }
 
@@ -53,7 +73,7 @@ export class ProjectRepository extends BaseRepository<Project, number> {
    * @param status Новый статус
    * @returns Обновленный проект
    */
-  async updateStatus(id: number, status: string): Promise<Project> {
+  async updateStatus(id: string, status: string): Promise<Project> {
     return this.update(id, {
       status,
       ...(status === 'COMPLETED' ? { completedAt: new Date() } : {}),
@@ -65,7 +85,7 @@ export class ProjectRepository extends BaseRepository<Project, number> {
    * @param id ID проекта
    * @returns Удаленный проект
    */
-  async softDelete(id: number): Promise<Project> {
+  async softDelete(id: string): Promise<Project> {
     return this.update(id, { deletedAt: new Date() });
   }
 
@@ -74,7 +94,7 @@ export class ProjectRepository extends BaseRepository<Project, number> {
    * @param id ID проекта
    * @returns Восстановленный проект
    */
-  async restore(id: number): Promise<Project> {
+  async restore(id: string): Promise<Project> {
     return this.update(id, { deletedAt: null });
   }
 
@@ -86,7 +106,7 @@ export class ProjectRepository extends BaseRepository<Project, number> {
   async findAllWithDetails(options?: {
     skip?: number;
     take?: number;
-    where?: Prisma.ProjectWhereInput;
+    where?: any;
   }): Promise<Project[]> {
     const { skip, take, where } = options || {};
 
@@ -107,7 +127,7 @@ export class ProjectRepository extends BaseRepository<Project, number> {
    * @param id ID проекта
    * @returns Проект со всеми связями
    */
-  async findByIdWithDetails(id: number): Promise<Project | null> {
+  async findByIdWithDetails(id: string): Promise<Project | null> {
     return this.findById(id, {
       include: {
         owner: true,
@@ -154,7 +174,7 @@ export class ProjectRepository extends BaseRepository<Project, number> {
    * @param userId ID пользователя
    * @returns Объект со статистикой
    */
-  async getUserProjectStats(userId: number): Promise<{
+  async getUserProjectStats(userId: string): Promise<{
     total: number;
     completed: number;
     active: number;

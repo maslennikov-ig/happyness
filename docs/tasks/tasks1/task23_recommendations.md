@@ -19,7 +19,7 @@
 // Пример настройки в package.json:
 {
   "scripts": {
-    "generate:api-types": "swagger-typescript-api -p http://localhost:3000/api/docs/v1-json -o ./src/frontend/types/api -n api.ts"
+    "generate:api-types": "swagger-typescript-api -p http://localhost:3100/api/docs/v1-json -o ./src/frontend/types/api -n api.ts"
   }
 }
 ```
@@ -66,7 +66,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, options);
   SwaggerModule.setup('api/docs', app, document);
 
-  await app.listen(3000);
+  await app.listen(3100);
 }
 bootstrap();
 ```

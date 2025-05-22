@@ -5,6 +5,9 @@ const hooksPlugin = require('eslint-plugin-react-hooks');
 
 module.exports = [
   {
+    ignores: ['**/node_modules/**', '**/dist/**', '**/dist/types/**', '**/build/**', '**/.next/**'],
+  },
+  {
     files: ['**/*.{js,jsx,ts,tsx}'],
     languageOptions: {
       ecmaVersion: 'latest',
@@ -37,6 +40,6 @@ module.exports = [
         version: 'detect',
       },
     },
-    ignores: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/.next/**'],
+    ignores: ['**/node_modules/**', '**/dist/**', '**/dist/types/**', '**/build/**', '**/.next/**'],
   },
 ];

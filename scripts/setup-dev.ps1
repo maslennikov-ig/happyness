@@ -68,7 +68,7 @@ Write-Host ""
 Write-Host "✅ Настройка окружения разработки завершена!" -ForegroundColor Green
 Write-Host ""
 Write-Host "🌐 Вы можете открыть:" -ForegroundColor Cyan
-Write-Host "   - Frontend: http://localhost:3000" -ForegroundColor Gray
+Write-Host "   - Frontend: http://localhost:3100" -ForegroundColor Gray
 Write-Host "   - Backend API: http://localhost:4000/api" -ForegroundColor Gray  
 Write-Host "   - API Docs: http://localhost:4000/api/docs" -ForegroundColor Gray
 Write-Host ""

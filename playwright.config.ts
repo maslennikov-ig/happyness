@@ -29,7 +29,7 @@ export default defineConfig({
     trace: 'on-first-retry',
 
     // Базовый URL для всех относительных URL в тестах
-    baseURL: 'http://localhost:3000',
+    baseURL: 'http://localhost:3100',
   },
 
   // Конфигурация для разных браузеров
@@ -51,7 +51,7 @@ export default defineConfig({
   // Настройка веб-сервера, который будет запускаться перед тестами
   webServer: {
     command: 'npm run dev',
-    port: 3000,
+    port: 3100,
     reuseExistingServer: !process.env.CI,
     timeout: 60 * 1000,
   },

@@ -1,14 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
-  experimental: {
-    appDir: true,
-  },
   distDir: 'dist',
   eslint: {
     dirs: ['src/frontend'],
   },
+  // swcMinify и experimental.appDir удалены как устаревшие
 };
 
-module.exports = nextConfig; 
+module.exports = nextConfig;

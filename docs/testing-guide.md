@@ -353,7 +353,7 @@ import { test, expect } from '@playwright/test';
 
 test('basic test using MCP server', async ({ page }) => {
   // Переходим на домашнюю страницу приложения
-  await page.goto('http://localhost:3000');
+  await page.goto('http://localhost:3100');
 
   // Проверяем, что страница загрузилась и содержит ожидаемый заголовок
   await expect(page).toHaveTitle(/Happyness/);

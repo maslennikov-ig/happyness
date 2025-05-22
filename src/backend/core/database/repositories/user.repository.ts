@@ -1,13 +1,29 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, User } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { BaseRepository } from './base.repository';
 import { PrismaService } from '../prisma.service';
+
+// Определяем тип User на основе модели из схемы Prisma
+type User = {
+  id: string;
+  email: string;
+  name?: string | null;
+  password: string;
+  role: string;
+  phone?: string | null;
+  avatar?: string | null;
+  isActive: boolean;
+  lastLoginAt?: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt?: Date | null;
+};
 
 /**
  * Репозиторий для работы с пользователями
  */
 @Injectable()
-export class UserRepository extends BaseRepository<User, number> {
+export class UserRepository extends BaseRepository<User, string> {
   protected readonly model = 'user';
 
   constructor(protected readonly prisma: PrismaService) {
@@ -57,7 +73,7 @@ export class UserRepository extends BaseRepository<User, number> {
    * @param isActive Статус активности
    * @returns Обновленный пользователь
    */
-  async updateActivity(id: number, isActive: boolean): Promise<User> {
+  async updateActivity(id: string, isActive: boolean): Promise<User> {
     return this.update(id, {
       isActive,
       ...(isActive ? { lastLoginAt: new Date() } : {}),
@@ -69,7 +85,7 @@ export class UserRepository extends BaseRepository<User, number> {
    * @param id ID пользователя
    * @returns Удаленный пользователь
    */
-  async softDelete(id: number): Promise<User> {
+  async softDelete(id: string): Promise<User> {
     return this.update(id, { deletedAt: new Date() });
   }
 
@@ -78,7 +94,7 @@ export class UserRepository extends BaseRepository<User, number> {
    * @param id ID пользователя
    * @returns Восстановленный пользователь
    */
-  async restore(id: number): Promise<User> {
+  async restore(id: string): Promise<User> {
     return this.update(id, { deletedAt: null });
   }
 
@@ -90,7 +106,7 @@ export class UserRepository extends BaseRepository<User, number> {
   async findAllWithProfile(options?: {
     skip?: number;
     take?: number;
-    where?: Prisma.UserWhereInput;
+    where?: any;
   }): Promise<User[]> {
     const { skip, take, where } = options || {};
 
@@ -110,7 +126,7 @@ export class UserRepository extends BaseRepository<User, number> {
    * @param id ID пользователя
    * @returns Пользователь со всеми связями
    */
-  async findByIdWithFullProfile(id: number): Promise<User | null> {
+  async findByIdWithFullProfile(id: string): Promise<User | null> {
     return this.findById(id, {
       include: {
         contractors: true,

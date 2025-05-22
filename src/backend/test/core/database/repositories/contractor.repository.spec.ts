@@ -39,7 +39,7 @@ describe('ContractorRepository', () => {
 
   describe('findByUserId', () => {
     it('должен возвращать подрядчиков по ID пользователя', async () => {
-      const userId = 1;
+      const userId = '1';
       const mockContractors = [
         { id: 1, name: 'Contractor 1', userId },
         { id: 2, name: 'Contractor 2', userId },
@@ -105,7 +105,7 @@ describe('ContractorRepository', () => {
 
   describe('updateRating', () => {
     it('должен обновлять рейтинг подрядчика', async () => {
-      const id = 1;
+      const id = '1';
       const rating = 4.5;
       const updatedContractor = { id, name: 'Contractor', rating };
       mockPrismaService.contractor.update.mockResolvedValue(updatedContractor);
@@ -122,7 +122,7 @@ describe('ContractorRepository', () => {
 
   describe('incrementReviewCount', () => {
     it('должен увеличивать счетчик отзывов подрядчика', async () => {
-      const id = 1;
+      const id = '1';
       const mockContractor = { id, name: 'Contractor', reviewCount: 5 };
       const updatedContractor = { ...mockContractor, reviewCount: 6 };
 
@@ -142,7 +142,7 @@ describe('ContractorRepository', () => {
     });
 
     it('должен обрабатывать случай с отсутствующим счетчиком отзывов', async () => {
-      const id = 1;
+      const id = '1';
       const mockContractor = { id, name: 'Contractor' }; // Нет reviewCount
       const updatedContractor = { ...mockContractor, reviewCount: 1 };
 
@@ -159,7 +159,7 @@ describe('ContractorRepository', () => {
     });
 
     it('должен выбрасывать ошибку, если подрядчик не найден', async () => {
-      const id = 999;
+      const id = '999';
       mockPrismaService.contractor.findUnique.mockResolvedValue(null);
 
       await expect(repository.incrementReviewCount(id)).rejects.toThrow(
@@ -170,7 +170,7 @@ describe('ContractorRepository', () => {
 
   describe('softDelete', () => {
     it('должен устанавливать deletedAt для подрядчика', async () => {
-      const id = 1;
+      const id = '1';
       const deletedContractor = { id, name: 'Contractor', deletedAt: new Date() };
       mockPrismaService.contractor.update.mockResolvedValue(deletedContractor);
 
@@ -186,7 +186,7 @@ describe('ContractorRepository', () => {
 
   describe('restore', () => {
     it('должен устанавливать deletedAt в null для подрядчика', async () => {
-      const id = 1;
+      const id = '1';
       const restoredContractor = { id, name: 'Contractor', deletedAt: null };
       mockPrismaService.contractor.update.mockResolvedValue(restoredContractor);
 
@@ -238,7 +238,7 @@ describe('ContractorRepository', () => {
 
   describe('findByIdWithDetails', () => {
     it('должен возвращать подрядчика с полными деталями по ID', async () => {
-      const id = 1;
+      const id = '1';
       const mockContractor = {
         id,
         name: 'Contractor with Full Details',

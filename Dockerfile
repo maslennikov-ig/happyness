@@ -35,8 +35,8 @@ COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/prisma ./prisma
 
 # Экспозиция портов
-EXPOSE 3000
-EXPOSE 3001
+EXPOSE 3100
+EXPOSE 4000
 
 # Запуск приложения
-CMD ["npm", "start"] 
+CMD ["npm", "start"]

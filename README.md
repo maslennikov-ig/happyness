@@ -116,7 +116,7 @@ Happyness/
 ├── .eslintrc.js           # Конфигурация ESLint
 ├── .gitignore             # Игнорируемые файлы и директории для Git
 ├── .prettierrc            # Конфигурация Prettier
-├── changelog.md           # История изменений
+├── ./changelog.md           # История изменений
 ├── docker-compose.yml     # Docker Compose конфигурация
 ├── nest-cli.json          # Конфигурация NestJS CLI
 ├── next.config.js         # Конфигурация Next.js
@@ -127,11 +127,11 @@ Happyness/
 
 ## Документация
 
-Для детального ознакомления со структурой документации см. [docs/README.md](./docs/README.md).
+Для навигации по документации см. [Документация по проекту](./docs/index.md).
 
 ### Ключевые документы
 
-- [**Общая документация**](./docs/README.md) - Обзор всей документации проекта
+- [**Общая документация**](./docs/index.md) - Обзор всей документации проекта
 - [**Архитектура**](./docs/architecture.md) - Описание архитектуры проекта
 - [**Модули**](./docs/modules.md) - Руководство по модульной системе
 - [**База данных**](./docs/database/README.md) - Документация по базе данных
@@ -276,8 +276,10 @@ Frontend построен с использованием Next.js и App Router,
 1. Откройте проект в VS Code
 2. Перейдите в раздел "Run and Debug" (Ctrl+Shift+D)
 3. Выберите конфигурацию:
-   - "Frontend: Next.js" - для отладки frontend
-   - "Backend: NestJS" - для отладки backend
+
+- "Frontend: Next.js" - для отладки frontend
+- "Backend: NestJS" - для отладки backend
+
 4. Нажмите F5 для начала отладки
 
 ## Лицензия

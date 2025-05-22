@@ -1,3 +1,4 @@
+'use client';
 import * as React from 'react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -69,8 +70,14 @@ export function RegisterForm() {
 
       // Перенаправляем на главную страницу или страницу приветствия
       router.push('/dashboard');
-    } catch (err: any) {
-      setError(err.message || 'Произошла ошибка при регистрации');
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else if (typeof err === 'string') {
+        setError(err);
+      } else {
+        setError('Произошла ошибка при регистрации');
+      }
     } finally {
       setIsLoading(false);
     }
