@@ -1,10 +1,23 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, Logger } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { LoggerService } from './core/logger/logger.service';
+import { HttpLoggerInterceptor } from './core/logger/http-logger.interceptor';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  // Создаем логгер для приложения
+  const logger = new LoggerService();
+  logger.setContext('Bootstrap');
+
+  // Создаем приложение с настроенным логгером
+  const app = await NestFactory.create(AppModule, {
+    logger: logger,
+    bufferLogs: true,
+  });
+
+  // Устанавливаем логгер как глобальный
+  app.useLogger(logger);
 
   // Глобальная валидация DTO
   app.useGlobalPipes(
@@ -38,7 +51,8 @@ async function bootstrap() {
   // Запуск сервера
   const port = process.env.PORT || 4000;
   await app.listen(port);
-  console.warn(`Приложение запущено на порту: ${port}`);
+  logger.log(`Приложение Happyness успешно запущено на порту: ${port}`);
+  logger.log(`Swagger документация доступна по адресу: http://localhost:${port}/api/docs`);
 }
 
 bootstrap();

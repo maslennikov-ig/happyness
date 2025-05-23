@@ -83,7 +83,7 @@ describe('Auth API (e2e)', () => {
         // Логируем ошибку и переключаемся на моки вместо реальной БД
         console.warn('Невозможно подключиться к Prisma. Используем моки для тестов.', error);
         usePrismaClient = false;
-        prisma = createMockPrismaService() as PrismaService;
+        prisma = createMockPrismaService() as unknown as PrismaService;
       }
 
       // Настраиваем глобальные пайпы для валидации

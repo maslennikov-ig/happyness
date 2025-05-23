@@ -17,10 +17,12 @@
 
 1. **Lint**: Проверка кода с помощью ESLint и проверка типов TypeScript.
 
-   - Шаги:
-     - Установка зависимостей
-     - Запуск ESLint
-     - Проверка типов TypeScript
+> **Важно:** Frontend разворачивается только локально (npm run dev), в Docker Compose остаются только backend, postgres, redis, adminer (опционально). Для работы фронта укажите NEXT_PUBLIC_API_URL, который указывает на backend в докере (например, http://localhost:4000/api).
+
+- Шаги:
+  - Установка зависимостей
+  - Запуск ESLint
+  - Проверка типов TypeScript
 
 2. **Test**: Запуск автоматических тестов.
    - Шаги:

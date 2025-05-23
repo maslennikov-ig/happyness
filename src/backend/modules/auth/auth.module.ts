@@ -11,13 +11,13 @@ import { PasswordService } from './services/password.service';
 import { TokenService } from './services/token.service';
 import { TokenStorageService } from './services/token-storage.service';
 import { RedisTokenStorageService } from './services/redis-token-storage.service';
-import { PrismaModule } from '../../prisma/prisma.module';
+// Импортируем PrismaService напрямую из core/database
+import { PrismaService } from '../../core/database/prisma.service';
 import { RedisModule } from '../../core/database/redis.module';
 
 @Module({
   imports: [
     UsersModule,
-    PrismaModule,
     RedisModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
@@ -38,8 +38,12 @@ import { RedisModule } from '../../core/database/redis.module';
     JwtStrategy,
     PasswordService,
     TokenService,
-    TokenStorageService,
+    PrismaService,
     RedisTokenStorageService,
+    {
+      provide: TokenStorageService,
+      useClass: RedisTokenStorageService,
+    },
   ],
   exports: [
     AuthService,

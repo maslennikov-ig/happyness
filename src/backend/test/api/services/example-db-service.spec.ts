@@ -12,7 +12,7 @@ import { seedTestDatabase } from '../../utils/seed';
 class UsersService {
   constructor(private prisma: PrismaClient) {}
 
-  async findUserById(id: number) {
+  async findUserById(id: string) {
     return this.prisma.user.findUnique({
       where: { id },
     });
@@ -35,7 +35,7 @@ class UsersService {
     });
   }
 
-  async updateUser(id: number, data: Partial<{ name: string; email: string }>) {
+  async updateUser(id: string, data: Partial<{ name: string; email: string }>) {
     return this.prisma.user.update({
       where: { id },
       data,

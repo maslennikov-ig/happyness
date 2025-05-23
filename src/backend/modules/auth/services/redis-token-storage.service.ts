@@ -2,8 +2,8 @@ import { Injectable, Inject, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 import { REDIS_CLIENT } from '../../../core/database/redis.module';
-import { TokenStorageService } from './token-storage.service';
 import { ITokenStorage } from '../interfaces/token-storage.interface';
+import { PrismaService } from '../../../core/database/prisma.service';
 
 /**
  * Сервис для хранения refresh токенов в Redis
@@ -22,7 +22,7 @@ export class RedisTokenStorageService implements ITokenStorage {
   constructor(
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
     private readonly configService: ConfigService,
-    private readonly prismaTokenService: TokenStorageService
+    private readonly prisma: PrismaService
   ) {
     this.maxUserSessions = this.configService.get('MAX_USER_SESSIONS') || 5;
     this.refreshTokenUsageLimit = this.configService.get('REFRESH_TOKEN_USAGE_LIMIT') || 10;
@@ -101,7 +101,13 @@ export class RedisTokenStorageService implements ITokenStorage {
 
       // Сохраняем в Prisma для обратной совместимости
       try {
-        await this.prismaTokenService.saveRefreshToken(userId, refreshToken, expiresAt);
+        await this.prisma.userRefreshToken.create({
+          data: {
+            token: refreshToken,
+            expiresAt,
+            user: { connect: { id: userId } },
+          },
+        });
       } catch (error) {
         this.logger.warn('Не удалось сохранить токен в Prisma (fallback)', error.message);
       }
@@ -109,7 +115,13 @@ export class RedisTokenStorageService implements ITokenStorage {
       this.logger.error(`Ошибка сохранения токена в Redis`, error.stack);
 
       // В случае ошибки Redis используем Prisma в качестве fallback
-      await this.prismaTokenService.saveRefreshToken(userId, refreshToken, expiresAt);
+      await this.prisma.userRefreshToken.create({
+        data: {
+          token: refreshToken,
+          expiresAt,
+          user: { connect: { id: userId } },
+        },
+      });
     }
   }
 
@@ -129,7 +141,17 @@ export class RedisTokenStorageService implements ITokenStorage {
 
       if (!tokenData) {
         // Если токен не найден в Redis, пробуем найти в Prisma
-        return await this.prismaTokenService.findRefreshToken(refreshToken);
+        const tokenRecord = await this.prisma.userRefreshToken.findUnique({
+          where: { token: refreshToken },
+          include: { user: true },
+        });
+
+        if (!tokenRecord) return null;
+
+        return {
+          ...tokenRecord,
+          user: tokenRecord.user,
+        };
       }
 
       const token = JSON.parse(tokenData);
@@ -152,11 +174,19 @@ export class RedisTokenStorageService implements ITokenStorage {
       // Получаем данные пользователя из Prisma
       // В реальном проекте желательно реализовать кэш пользователей в Redis
       try {
-        const userWithToken = await this.prismaTokenService.findRefreshToken(refreshToken);
+        const tokenRecord = await this.prisma.userRefreshToken.findUnique({
+          where: { token: refreshToken },
+          include: { user: true },
+        });
 
-        if (!userWithToken) {
+        if (!tokenRecord) {
           return null;
         }
+
+        const userWithToken = {
+          ...tokenRecord,
+          user: tokenRecord.user,
+        };
 
         // Объединяем данные токена из Redis и пользователя из Prisma
         return {
@@ -175,7 +205,17 @@ export class RedisTokenStorageService implements ITokenStorage {
       this.logger.error('Ошибка поиска refresh токена в Redis', error.stack);
 
       // Fallback на Prisma в случае ошибки Redis
-      return await this.prismaTokenService.findRefreshToken(refreshToken);
+      const tokenRecord = await this.prisma.userRefreshToken.findUnique({
+        where: { token: refreshToken },
+        include: { user: true },
+      });
+
+      if (!tokenRecord) return null;
+
+      return {
+        ...tokenRecord,
+        user: tokenRecord.user,
+      };
     }
   }
 
@@ -199,7 +239,20 @@ export class RedisTokenStorageService implements ITokenStorage {
 
       if (!tokenData) {
         // Если токен не найден в Redis, используем Prisma
-        return await this.prismaTokenService.incrementUsageCount(tokenId);
+        const token = await this.prisma.userRefreshToken.findUnique({
+          where: { id: tokenId },
+        });
+
+        if (!token) return 0;
+
+        const newCount = (token.usageCount || 0) + 1;
+
+        await this.prisma.userRefreshToken.update({
+          where: { id: tokenId },
+          data: { usageCount: newCount },
+        });
+
+        return newCount;
       }
 
       const token = JSON.parse(tokenData);
@@ -220,7 +273,10 @@ export class RedisTokenStorageService implements ITokenStorage {
 
       // Также обновляем в Prisma для синхронизации
       try {
-        await this.prismaTokenService.incrementUsageCount(tokenId);
+        await this.prisma.userRefreshToken.update({
+          where: { id: tokenId },
+          data: { usageCount: newCount },
+        });
       } catch (error) {
         this.logger.warn('Не удалось обновить счетчик использований в Prisma', error.message);
       }
@@ -230,7 +286,20 @@ export class RedisTokenStorageService implements ITokenStorage {
       this.logger.error('Ошибка инкремента счетчика использований токена', error.stack);
 
       // Fallback на Prisma
-      return await this.prismaTokenService.incrementUsageCount(tokenId);
+      const token = await this.prisma.userRefreshToken.findUnique({
+        where: { id: tokenId },
+      });
+
+      if (!token) return 0;
+
+      const newCount = (token.usageCount || 0) + 1;
+
+      await this.prisma.userRefreshToken.update({
+        where: { id: tokenId },
+        data: { usageCount: newCount },
+      });
+
+      return newCount;
     }
   }
 
@@ -259,12 +328,22 @@ export class RedisTokenStorageService implements ITokenStorage {
       }
 
       // Отзываем также в Prisma
-      await this.prismaTokenService.revokeRefreshToken(refreshToken);
+      await this.prisma.userRefreshToken.update({
+        where: { token: refreshToken },
+        data: { isRevoked: true },
+      });
     } catch (error) {
       this.logger.error('Ошибка отзыва refresh токена', error.stack);
 
       // Fallback
-      await this.prismaTokenService.revokeRefreshToken(refreshToken);
+      try {
+        await this.prisma.userRefreshToken.update({
+          where: { token: refreshToken },
+          data: { isRevoked: true },
+        });
+      } catch (fallbackError) {
+        this.logger.error('Ошибка fallback при отзыве токена', fallbackError.stack);
+      }
     }
   }
 
@@ -292,12 +371,22 @@ export class RedisTokenStorageService implements ITokenStorage {
       }
 
       // Отзываем также в Prisma
-      await this.prismaTokenService.revokeAllUserTokens(userId);
+      await this.prisma.userRefreshToken.updateMany({
+        where: { userId: userId },
+        data: { isRevoked: true },
+      });
     } catch (error) {
       this.logger.error('Ошибка отзыва всех токенов пользователя', error.stack);
 
       // Fallback
-      await this.prismaTokenService.revokeAllUserTokens(userId);
+      try {
+        await this.prisma.userRefreshToken.updateMany({
+          where: { userId: userId },
+          data: { isRevoked: true },
+        });
+      } catch (fallbackError) {
+        this.logger.error('Ошибка fallback при отзыве всех токенов', fallbackError.stack);
+      }
     }
   }
 
@@ -313,7 +402,13 @@ export class RedisTokenStorageService implements ITokenStorage {
       // так как они удаляются автоматически по истечении TTL
 
       // Очищаем в Prisma для синхронизации
-      await this.prismaTokenService.cleanupExpiredTokens();
+      const now = new Date();
+      await this.prisma.userRefreshToken.deleteMany({
+        where: {
+          expiresAt: { lt: now },
+          OR: [{ isRevoked: true }],
+        },
+      });
     } catch (error) {
       this.logger.error('Ошибка очистки истекших токенов', error.stack);
     }

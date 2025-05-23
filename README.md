@@ -40,7 +40,7 @@ Happyness - это современная система управления п
    cp .env.example .env
    ```
 
-4. Запустите базы данных с помощью Docker Compose:
+4. Запустите backend и базы данных с помощью Docker Compose:
 
    ```bash
    docker-compose up -d
@@ -53,11 +53,29 @@ Happyness - это современная система управления п
 
 ### Запуск
 
-#### Режим разработки
+#### Frontend (локально)
 
 ```bash
+cd src/frontend
+npm install
 npm run dev
 ```
+
+#### Backend (в докере)
+
+```bash
+docker-compose up backend
+```
+
+### Переменные окружения
+
+- Для локального фронта обязательно укажите:
+
+  ```env
+  NEXT_PUBLIC_API_URL=http://localhost:4000/api
+  ```
+
+- Подробнее — см. [changelog.md](./changelog.md)
 
 #### Режим production
 

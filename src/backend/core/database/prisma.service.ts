@@ -23,7 +23,11 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     // Используем глобальный экземпляр в режиме разработки для избежания множественных подключений
     if (process.env.NODE_ENV === 'development') {
       if (!global.prismaInstance) {
-        global.prismaInstance = this;
+        // Создаем новый инстанс вместо присваивания this
+        global.prismaInstance = new PrismaClient({
+          log:
+            process.env.NODE_ENV === 'development' ? ['query', 'info', 'warn', 'error'] : ['error'],
+        });
       }
     }
   }
@@ -51,7 +55,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
    * @param fn Функция с операциями, которые должны быть выполнены в транзакции
    * @returns Результат выполнения функции
    */
-  async transaction<T>(fn: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T> {
+  async executeTransaction<T>(fn: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T> {
     try {
       return await this.$transaction(fn);
     } catch (error) {

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { ITokenStorage } from '../interfaces/token-storage.interface';
+import { TokenStorageService } from './token-storage.service';
 
 type UserPayload = {
   id: string;
@@ -22,7 +22,7 @@ export class TokenService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-    private readonly tokenStorage: ITokenStorage
+    private readonly tokenStorage: TokenStorageService
   ) {
     this.accessTokenSecret = this.configService.get<string>('JWT_ACCESS_SECRET');
     this.refreshTokenSecret = this.configService.get<string>('JWT_REFRESH_SECRET');

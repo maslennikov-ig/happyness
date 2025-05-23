@@ -5,7 +5,7 @@ yarn-debug.log
 yarn-error.log
 
 # Сборки
-dist
+/dist
 .next
 out
 build
@@ -13,13 +13,16 @@ build
 # Тесты
 coverage
 .nyc_output
+**/*.spec.ts
+**/*.test.ts
+**/*.e2e-spec.ts
+**/*.e2e-test.ts
+**/test
+**/tests
+**/vitest.config*.ts
 
 # Окружение и конфигурация
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env*
 
 # Системные файлы
 .DS_Store
@@ -32,16 +35,21 @@ Thumbs.db
 *.sublime-workspace
 
 # Git
-.git
-.gitignore
+.git*
 .github
 
 # Документация
-docs
+/docs
 *.md
 !README.md
 
-# Другие файлы
-.husky
+# Docker
 .docker-data
-*.log 
+Dockerfile*
+docker-compose*.yml
+
+# Логи
+*.log
+
+# Прочее
+.husky

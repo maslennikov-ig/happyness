@@ -22,4 +22,5 @@ COPY . .
 EXPOSE 3100
 
 # Команда по умолчанию (будет переопределена в docker-compose)
+USER node
 CMD ["npm", "run", "dev"] 

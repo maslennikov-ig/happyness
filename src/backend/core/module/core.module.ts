@@ -5,6 +5,10 @@ import { ModuleLoader } from './module-loader';
 import { ModuleValidator } from './module-validator';
 import { ModuleRegistryService } from './module-registry.service';
 import { ModuleFactory } from './module-factory.service';
+import { LoggerModule } from '../logger/logger.module';
+import { ConfigModule } from '../config/config.module';
+import { EventBusModule } from '../events/event-bus.module';
+import { HealthCheckModule } from '../health/health-check.module';
 
 /**
  * Глобальный модуль ядра приложения
@@ -12,6 +16,12 @@ import { ModuleFactory } from './module-factory.service';
  */
 @Global()
 @Module({
+  imports: [
+    LoggerModule,
+    ConfigModule.forRoot(),
+    EventBusModule.forRoot(),
+    HealthCheckModule.forRoot(),
+  ],
   providers: [
     {
       provide: PrismaService,
@@ -48,6 +58,12 @@ export class CoreModule {
     return {
       module: CoreModule,
       global: options.isGlobal ?? true,
+      imports: [
+        LoggerModule,
+        ConfigModule.forRoot(),
+        EventBusModule.forRoot(),
+        HealthCheckModule.forRoot(),
+      ],
       providers: [
         {
           provide: 'CORE_OPTIONS',
@@ -104,4 +120,19 @@ export interface CoreModuleOptions {
    * Автоматическая загрузка модулей при запуске
    */
   autoloadModules?: boolean;
+
+  /**
+   * Конфигурация логгера
+   */
+  logger?: any;
+
+  /**
+   * Конфигурация шины событий
+   */
+  eventBus?: any;
+
+  /**
+   * Конфигурация мониторинга здоровья
+   */
+  healthCheck?: any;
 }

@@ -245,6 +245,6 @@ export abstract class BaseRepository<T, K = number | string> implements IBaseRep
   async executeWithTransaction<R>(
     operation: (prisma: Prisma.TransactionClient) => Promise<R>
   ): Promise<R> {
-    return this.prisma.transaction(operation);
+    return this.prisma.executeTransaction(operation);
   }
 }

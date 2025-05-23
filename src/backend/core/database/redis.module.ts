@@ -1,4 +1,4 @@
-import { Module, Global, OnModuleDestroy } from '@nestjs/common';
+import { Module, Global, OnModuleDestroy, Inject } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 
@@ -19,17 +19,10 @@ export const REDIS_CLIENT = 'REDIS_CLIENT';
       provide: REDIS_CLIENT,
       inject: [ConfigService],
       useFactory: (configService: ConfigService): Redis => {
-        const host = configService.get<string>('REDIS_HOST', 'localhost');
-        const port = configService.get<number>('REDIS_PORT', 6379);
-        const password = configService.get<string>('REDIS_PASSWORD', '');
-        const db = configService.get<number>('REDIS_DB', 0);
+        const redisUrl = configService.get<string>('REDIS_URL', 'redis://redis:6379');
 
         // Создаем подключение к Redis
-        const redis = new Redis({
-          host,
-          port,
-          password: password || undefined,
-          db,
+        const redis = new Redis(redisUrl, {
           // На случай недоступности Redis предусматриваем повторное подключение
           retryStrategy: times => {
             // Повторная попытка каждую секунду до 10 попыток
@@ -44,7 +37,7 @@ export const REDIS_CLIENT = 'REDIS_CLIENT';
         });
 
         redis.on('connect', () => {
-          console.log(`Connected to Redis at ${host}:${port}`);
+          console.log(`Connected to Redis at ${redisUrl}`);
         });
 
         return redis;
@@ -54,7 +47,11 @@ export const REDIS_CLIENT = 'REDIS_CLIENT';
   exports: [REDIS_CLIENT],
 })
 export class RedisModule implements OnModuleDestroy {
-  constructor(private readonly redis: Redis) {}
+  private redis: Redis;
+
+  constructor(@Inject(REDIS_CLIENT) redis: Redis) {
+    this.redis = redis;
+  }
 
   /**
    * Закрываем подключение при остановке приложения

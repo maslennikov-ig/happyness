@@ -40,7 +40,7 @@ describe('UserRepository', () => {
   describe('findByEmail', () => {
     it('должен возвращать пользователя по email', async () => {
       const email = 'test@example.com';
-      const mockUser = { id: 1, email, name: 'Test User' };
+      const mockUser = { id: '1', email, name: 'Test User' };
       mockPrismaService.user.findFirst.mockResolvedValue(mockUser);
 
       const result = await repository.findByEmail(email);
@@ -67,7 +67,7 @@ describe('UserRepository', () => {
   describe('findByUsername', () => {
     it('должен возвращать пользователя по имени пользователя', async () => {
       const username = 'testuser';
-      const mockUser = { id: 1, username, name: 'Test User' };
+      const mockUser = { id: '1', username, name: 'Test User' };
       mockPrismaService.user.findFirst.mockResolvedValue(mockUser);
 
       const result = await repository.findByUsername(username);
@@ -83,8 +83,8 @@ describe('UserRepository', () => {
     it('должен возвращать список пользователей с определенной ролью', async () => {
       const role = 'ADMIN';
       const mockUsers = [
-        { id: 1, name: 'Admin 1', role },
-        { id: 2, name: 'Admin 2', role },
+        { id: '1', name: 'Admin 1', role },
+        { id: '2', name: 'Admin 2', role },
       ];
       mockPrismaService.user.findMany.mockResolvedValue(mockUsers);
 
@@ -125,7 +125,7 @@ describe('UserRepository', () => {
 
   describe('updateActivity', () => {
     it('должен обновлять статус активности пользователя и устанавливать lastLoginAt', async () => {
-      const id = 1;
+      const id = '1';
       const isActive = true;
       const updatedUser = { id, isActive, lastLoginAt: new Date() };
       mockPrismaService.user.update.mockResolvedValue(updatedUser);
@@ -143,7 +143,7 @@ describe('UserRepository', () => {
     });
 
     it('должен обновлять только статус активности при isActive=false', async () => {
-      const id = 1;
+      const id = '1';
       const isActive = false;
       const updatedUser = { id, isActive, lastLoginAt: null };
       mockPrismaService.user.update.mockResolvedValue(updatedUser);
@@ -160,7 +160,7 @@ describe('UserRepository', () => {
 
   describe('softDelete', () => {
     it('должен устанавливать deletedAt для пользователя', async () => {
-      const id = 1;
+      const id = '1';
       const deletedUser = { id, deletedAt: new Date() };
       mockPrismaService.user.update.mockResolvedValue(deletedUser);
 
@@ -176,7 +176,7 @@ describe('UserRepository', () => {
 
   describe('restore', () => {
     it('должен устанавливать deletedAt в null для пользователя', async () => {
-      const id = 1;
+      const id = '1';
       const restoredUser = { id, deletedAt: null };
       mockPrismaService.user.update.mockResolvedValue(restoredUser);
 
@@ -199,7 +199,7 @@ describe('UserRepository', () => {
       };
       const mockUsers = [
         {
-          id: 1,
+          id: '1',
           name: 'Test User',
           contractors: [],
           projects: [],
@@ -224,7 +224,7 @@ describe('UserRepository', () => {
 
   describe('findByIdWithFullProfile', () => {
     it('должен возвращать пользователя с полным профилем по ID', async () => {
-      const id = 1;
+      const id = '1';
       const mockUser = {
         id,
         name: 'Test User',
@@ -250,7 +250,7 @@ describe('UserRepository', () => {
     });
 
     it('должен возвращать null, если пользователь не найден', async () => {
-      const id = 999;
+      const id = '999';
       mockPrismaService.user.findUnique.mockResolvedValue(null);
 
       const result = await repository.findByIdWithFullProfile(id);

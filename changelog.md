@@ -1,5 +1,51 @@
 # Changelog
 
+## 2025-05-23
+
+### Добавлено
+
+- Завершена разработка компонентов ядра системы:
+  - Разработан сервис логирования (LoggerService) с поддержкой различных уровней логирования и вывода
+  - Создан интерцептор для автоматического логирования HTTP-запросов (HttpLoggerInterceptor)
+  - Разработан сервис конфигурации (ConfigService) с поддержкой множества источников конфигурации
+  - Реализован механизм событий и асинхронного взаимодействия (EventBusService)
+  - Создан сервис мониторинга здоровья компонентов (HealthCheckService)
+  - Добавлен API для получения статуса системы (/health и /health/detailed)
+  - Интегрированы все компоненты ядра в основной модуль приложения
+  - Добавлены необходимые зависимости: winston, joi, @nestjs/terminus и другие
+
+## 2025-05-23
+
+### Исправлено
+
+- Обновлена конфигурация PostCSS в src/frontend/postcss.config.js для поддержки Tailwind CSS v4 (заменен плагин tailwindcss на @tailwindcss/postcss)
+- Настроен запуск фронтенда на порту 3100 в скриптах package.json (корневом и src/frontend)
+
+## 2025-05-23
+
+### Исправлено
+
+- Устранена циклическая зависимость в RedisTokenStorageService: удалена зависимость от TokenStorageService, добавлены прямые запросы к Prisma.
+- Исправлена циклическая зависимость в RedisModule: добавлено корректное внедрение REDIS_CLIENT.
+- Исправлены настройки подключения к Redis: теперь используется URL вместо отдельных параметров host и port.
+- Отключен защищенный режим Redis для разрешения внешних подключений.
+- Исправлены настройки подключения к PostgreSQL: теперь используется имя сервиса postgres вместо localhost.
+- Исправлены ошибки прав доступа в dev-стейдже Dockerfile.backend (USER node теперь только для production, dev работает от root для корректной работы volume).
+- Добавлены зависимости: ioredis, zxcvbn, supertest, uuid в backend/package.json.
+- Улучшен .dockerignore: исключены тестовые файлы и лишние директории.
+- Все dev-only volumes в docker-compose.yml теперь явно помечены, volume dist отключён.
+- Исправлены ошибки компиляции TypeScript в Docker: изменена директория вывода на dist/build.
+- Добавлена очистка директории dist перед запуском в docker-compose.yml.
+- Создан tsconfig.build.json для исключения тестов из сборки.
+- Исправлен метод transaction в PrismaService для избежания конфликта с базовым классом.
+- Исправлены пути импорта в auth.module.ts.
+
+### Улучшено
+
+- Оптимизирована Docker-конфигурация для dev-режима.
+- Добавлены отдельные volume для node_modules и prisma.
+- Проведён CTO-аудит Dockerfile и docker-compose, реализованы best practices.
+
 ## 2025-05-22
 
 - Удалён устаревший атрибут `version` из `docker-compose.yml` (устранено предупреждение Docker Compose).
@@ -22,6 +68,11 @@
 ## [Unreleased]
 
 ### Изменено
+
+- Полностью удалён сервис frontend из docker-compose.yml. Теперь фронтенд разворачивается только локально, через npm run dev, без докера.
+- Удалён файл docker/Dockerfile.frontend как неиспользуемый.
+- docker/Dockerfile.backend оптимизирован: multi-stage build, devtools (python3, make, g++, @nestjs/cli) только в dev/builder, production-образ содержит только необходимые зависимости (postgresql-client).
+- Проверена и гарантирована корректная работа локального фронта с backend/db в докере через NEXT_PUBLIC_API_URL и CORS.
 
 - Документация и инфраструктура обновлены: основной порт фронта теперь 3100, исправлены инструкции, CORS_ORIGIN, healthcheck, локали для postgres, next.config.js и e2e README, все ссылки и примеры приведены к актуальному виду.
 
@@ -472,3 +523,9 @@
   - Добавлен раздел о Rate Limiting для API точек аутентификации в task31_auth_flows.md
   - Добавлен раздел о дополнительных мерах безопасности в task31_client_storage.md
   - Добавлена схема взаимодействия компонентов в task31_auth_components.md
+
+## [Unreleased]
+
+### Changed
+
+- Оптимизирован Dockerfile.backend: удалены все костыли, теперь playwright и тестовые зависимости гарантированно не попадают в production-сборку, всё максимально чисто и прозрачно
