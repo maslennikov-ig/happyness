@@ -12,9 +12,11 @@ import { seedTestDatabase } from '../../utils/seed';
 class UsersService {
   constructor(private prisma: PrismaClient) {}
 
-  async findUserById(id: string) {
+  async findUserById(id: string | number) {
+    // Преобразуем id в строку, если он передан как число
+    const idStr = typeof id === 'number' ? String(id) : id;
     return this.prisma.user.findUnique({
-      where: { id },
+      where: { id: idStr },
     });
   }
 
@@ -35,16 +37,20 @@ class UsersService {
     });
   }
 
-  async updateUser(id: string, data: Partial<{ name: string; email: string }>) {
+  async updateUser(id: string | number, data: Partial<{ name: string; email: string }>) {
+    // Преобразуем id в строку, если он передан как число
+    const idStr = typeof id === 'number' ? String(id) : id;
     return this.prisma.user.update({
-      where: { id },
+      where: { id: idStr },
       data,
     });
   }
 
-  async deleteUser(id: number) {
+  async deleteUser(id: string | number) {
+    // Преобразуем id в строку, если он передан как число
+    const idStr = typeof id === 'number' ? String(id) : id;
     return this.prisma.user.delete({
-      where: { id },
+      where: { id: idStr },
     });
   }
 }

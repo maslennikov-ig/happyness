@@ -1,7 +1,6 @@
 import { Injectable, LoggerService as NestLoggerService, Scope } from '@nestjs/common';
 import * as winston from 'winston';
 import { ConfigService } from '../config/config.service';
-import { createLogger, format, transports } from 'winston';
 import * as path from 'path';
 
 /**
@@ -79,13 +78,13 @@ export class LoggerService implements NestLoggerService {
 
     // Настраиваем форматы логов
     const logFormats = [
-      format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
-      format.errors({ stack: true }),
-      format(info => {
+      winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
+      winston.format.errors({ stack: true }),
+      winston.format(info => {
         // Фильтрация чувствительных данных
         return this.filterSensitiveData(info);
       })(),
-      format.json(),
+      winston.format.json(),
     ];
 
     // Настраиваем транспорты (куда выводить логи)
@@ -94,17 +93,21 @@ export class LoggerService implements NestLoggerService {
     // Консольный вывод
     if (loggerConfig.console) {
       logTransports.push(
-        new transports.Console({
-          format: format.combine(
-            format.colorize(),
-            format.printf(({ timestamp, level, message, context, traceId, userId, ...meta }) => {
-              const contextStr = context ? `[${context}]` : '';
-              const traceStr = traceId ? `(trace: ${traceId})` : '';
-              const userStr = userId ? `(user: ${userId})` : '';
-              const metaStr = Object.keys(meta).length ? `\n${JSON.stringify(meta, null, 2)}` : '';
+        new winston.transports.Console({
+          format: winston.format.combine(
+            winston.format.colorize(),
+            winston.format.printf(
+              ({ timestamp, level, message, context, traceId, userId, ...meta }) => {
+                const contextStr = context ? `[${context}]` : '';
+                const traceStr = traceId ? `(trace: ${traceId})` : '';
+                const userStr = userId ? `(user: ${userId})` : '';
+                const metaStr = Object.keys(meta).length
+                  ? `\n${JSON.stringify(meta, null, 2)}`
+                  : '';
 
-              return `${timestamp} ${level} ${contextStr} ${traceStr} ${userStr}: ${message}${metaStr}`;
-            })
+                return `${timestamp} ${level} ${contextStr} ${traceStr} ${userStr}: ${message}${metaStr}`;
+              }
+            )
           ),
         })
       );
@@ -115,14 +118,14 @@ export class LoggerService implements NestLoggerService {
       const logDir = loggerConfig.filePath || path.join(process.cwd(), 'logs');
 
       logTransports.push(
-        new transports.File({
+        new winston.transports.File({
           dirname: logDir,
           filename: 'error.log',
           level: 'error',
           maxsize: parseInt(loggerConfig.maxSize || '10485760'), // 10MB по умолчанию
           maxFiles: loggerConfig.maxFiles || 5,
         }),
-        new transports.File({
+        new winston.transports.File({
           dirname: logDir,
           filename: 'combined.log',
           maxsize: parseInt(loggerConfig.maxSize || '10485760'),
@@ -141,9 +144,9 @@ export class LoggerService implements NestLoggerService {
     }
 
     // Создаем логгер
-    this.logger = createLogger({
+    this.logger = winston.createLogger({
       level: loggerConfig.level,
-      format: format.combine(...logFormats),
+      format: winston.format.combine(...logFormats),
       defaultMeta: { service: 'happyness-api' },
       transports: logTransports,
     });

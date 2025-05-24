@@ -18,3 +18,6 @@ export * from './events';
 
 // Экспорт компонентов мониторинга здоровья
 export * from './health';
+
+// Экспорт компонентов обработки ошибок
+export * from './exceptions';

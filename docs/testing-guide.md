@@ -571,6 +571,125 @@ await clearTestDatabase(prisma);
    - Используйте семантические селекторы (например, `getByRole`, `getByText`)
    - Избегайте использования `data-testid` везде, где это возможно
 
+## Тестирование обработки ошибок API
+
+Проект предоставляет специальный контроллер для тестирования системы обработки ошибок API. Этот контроллер генерирует различные типы ошибок, что позволяет проверить правильность их обработки, форматирование ответов и логирование.
+
+### Тестовый контроллер для ошибок
+
+Контроллер `TestErrorsController` доступен по адресу `/test-errors` и содержит эндпоинты, каждый из которых генерирует определенный тип ошибки:
+
+- `GET /test-errors` - успешный запрос (для сравнения)
+- `POST /test-errors/validation-error` - ошибки валидации
+- `GET /test-errors/authentication-error` - ошибки аутентификации
+- `GET /test-errors/authorization-error` - ошибки авторизации
+- `GET /test-errors/resource-not-found/:id` - ошибки "ресурс не найден"
+- `POST /test-errors/conflict-error` - ошибки конфликта
+- `GET /test-errors/external-service-error` - ошибки внешних сервисов
+- `GET /test-errors/unexpected-error` - непредвиденные ошибки
+- `GET /test-errors/bad-request-error` - ошибки неверного запроса
+- `GET /test-errors/rate-limit-error` - ошибки превышения лимита запросов
+- `GET /test-errors/nest-http-exception` - стандартные HTTP исключения NestJS
+- `GET /test-errors/nest-internal-error` - внутренние ошибки сервера NestJS
+- `GET /test-errors/throw-error` - стандартные JavaScript ошибки
+
+### Использование контроллера для тестирования
+
+#### Ручное тестирование
+
+Для ручного тестирования обработки ошибок API можно использовать cURL или Postman:
+
+```bash
+# Пример запроса для проверки ошибки аутентификации
+curl -X GET http://localhost:3000/test-errors/authentication-error
+
+# Пример запроса для проверки ошибки валидации
+curl -X POST http://localhost:3000/test-errors/validation-error \
+  -H "Content-Type: application/json" \
+  -d '{"name": "T", "email": "not-an-email"}'
+```
+
+#### Автоматическое тестирование с помощью Supertest
+
+Для автоматического тестирования можно создать интеграционные тесты с использованием Supertest:
+
+```typescript
+import request from 'supertest';
+import { Test } from '@nestjs/testing';
+import { AppModule } from '../src/app.module';
+import { INestApplication } from '@nestjs/common';
+
+describe('Обработка ошибок API (интеграционный)', () => {
+  let app: INestApplication;
+
+  beforeAll(async () => {
+    const moduleRef = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+
+    app = moduleRef.createNestApplication();
+    await app.init();
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it('должен возвращать ошибку аутентификации', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/test-errors/authentication-error')
+      .expect(401);
+
+    expect(response.body.status).toBe('error');
+    expect(response.body.error.code).toBe('UNAUTHORIZED');
+  });
+
+  it('должен возвращать ошибку валидации', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/test-errors/validation-error')
+      .send({ name: 'A', email: 'invalid-email' })
+      .expect(422);
+
+    expect(response.body.status).toBe('error');
+    expect(response.body.error.code).toBe('VALIDATION_ERROR');
+    expect(response.body.error.validationErrors).toBeDefined();
+    expect(response.body.error.validationErrors.length).toBeGreaterThan(0);
+  });
+
+  // Дополнительные тесты для других типов ошибок...
+});
+```
+
+### Проверка структуры ошибок
+
+Убедитесь, что ответы соответствуют определенной в документации структуре:
+
+1. Общая структура ответа с ошибкой должна соответствовать:
+
+   ```json
+   {
+     "status": "error",
+     "error": {
+       "code": "ERROR_CODE",
+       "title": "Человеко-читаемый заголовок",
+       "status": 4xx или 5xx,
+       "message": "Детальное сообщение об ошибке",
+       "timestamp": "ISO дата и время",
+       "path": "/путь/запроса",
+       "requestId": "уникальный-идентификатор"
+     }
+   }
+   ```
+
+2. Для ошибок валидации должно присутствовать поле `validationErrors` с массивом ошибок валидации.
+
+### Советы по тестированию ошибок
+
+- Проверяйте не только статус-код ответа, но и структуру ошибки
+- Убедитесь, что сообщения об ошибках информативны, но не раскрывают внутреннюю информацию
+- При тестировании в production-режиме, проверьте, что чувствительная информация (стектрейсы, полные пути к файлам) не показывается в ответах
+- Убедитесь, что ошибки правильно логируются с соответствующим уровнем (error для 5xx, warn для 4xx, debug для валидации)
+
 ## Решение проблем
 
 ### JSDOM ограничения

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { authApi } from '@/lib/api/auth';
+import { authApi } from '../../lib/api/auth';
 
 // Мокируем глобальный fetch
 global.fetch = vi.fn();

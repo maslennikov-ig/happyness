@@ -9,6 +9,7 @@ import { UsersModule } from './modules/users/users.module';
 import { ProjectsModule } from './modules/projects/projects.module';
 import { RequestsModule } from './modules/requests/requests.module';
 import { ContractorsModule } from './modules/contractors/contractors.module';
+import { TestModule } from './modules/test/test.module';
 import { HttpLoggerInterceptor } from './core/logger/http-logger.interceptor';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 
@@ -38,6 +39,7 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
     ProjectsModule,
     RequestsModule,
     ContractorsModule,
+    TestModule, // Модуль для тестирования обработки ошибок
   ],
   providers: [
     // Глобальный интерцептор для логирования HTTP-запросов

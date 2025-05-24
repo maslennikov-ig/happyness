@@ -16,49 +16,49 @@ use context7
 
 ## Acceptance Criteria / Подзадачи
 
-1. [ ] Разработать единую структуру ответов об ошибках
+1. [x] Разработать единую структуру ответов об ошибках
 
-   - [ ] Создать интерфейсы для API-ошибок (ApiError, ErrorResponse)
-   - [ ] Реализовать форматирование ошибок по стандартам REST API (RFC 7807)
-   - [ ] Добавить метаданные (timestamp, errorId, path) для отладки
-   - [ ] Обеспечить локализацию сообщений об ошибках
+   - [x] Создать интерфейсы для API-ошибок (ApiError, ErrorResponse)
+   - [x] Реализовать форматирование ошибок по стандартам REST API (RFC 7807)
+   - [x] Добавить метаданные (timestamp, errorId, path) для отладки
+   - [x] Обеспечить локализацию сообщений об ошибках
 
-2. [ ] Создать иерархию классов ошибок для разных типов
+2. [x] Создать иерархию классов ошибок для разных типов
 
-   - [ ] Разработать базовый класс ошибки (AppError)
-   - [ ] Создать специфические классы для разных категорий ошибок:
-     - [ ] ValidationError (ошибки валидации)
-     - [ ] AuthenticationError (ошибки аутентификации)
-     - [ ] AuthorizationError (ошибки авторизации)
-     - [ ] ResourceNotFoundError (ресурс не найден)
-     - [ ] ConflictError (конфликты данных)
-     - [ ] ExternalServiceError (ошибки внешних сервисов)
-     - [ ] UnexpectedError (непредвиденные ошибки)
+   - [x] Разработать базовый класс ошибки (AppError)
+   - [x] Создать специфические классы для разных категорий ошибок:
+     - [x] ValidationError (ошибки валидации)
+     - [x] AuthenticationError (ошибки аутентификации)
+     - [x] AuthorizationError (ошибки авторизации)
+     - [x] ResourceNotFoundError (ресурс не найден)
+     - [x] ConflictError (конфликты данных)
+     - [x] ExternalServiceError (ошибки внешних сервисов)
+     - [x] UnexpectedError (непредвиденные ошибки)
 
-3. [ ] Реализовать глобальные перехватчики исключений для NestJS
+3. [x] Реализовать глобальные перехватчики исключений для NestJS
 
-   - [ ] Создать AllExceptionsFilter для обработки всех исключений
-   - [ ] Реализовать HttpExceptionsFilter для HTTP-исключений NestJS
-   - [ ] Добавить ValidationExceptionsFilter для ошибок валидации
-   - [ ] Интегрировать с системой логирования из ядра
+   - [x] Создать AllExceptionsFilter для обработки всех исключений
+   - [x] Реализовать HttpExceptionsFilter для HTTP-исключений NestJS
+   - [x] Добавить ValidationExceptionsFilter для ошибок валидации
+   - [x] Интегрировать с системой логирования из ядра
 
-4. [ ] Разработать механизм маппинга ошибок
+4. [x] Разработать механизм маппинга ошибок
 
-   - [ ] Маппинг исключений ORM в API-ошибки
-   - [ ] Маппинг системных ошибок Node.js в API-ошибки
-   - [ ] Маппинг ошибок валидации в структурированные ValidationError
-   - [ ] Обеспечение сохранения контекста ошибки при маппинге
+   - [x] Маппинг исключений ORM в API-ошибки
+   - [x] Маппинг системных ошибок Node.js в API-ошибки
+   - [x] Маппинг ошибок валидации в структурированные ValidationError
+   - [x] Обеспечение сохранения контекста ошибки при маппинге
 
-5. [ ] Внедрить контекстную информацию в обработку ошибок
+5. [x] Внедрить контекстную информацию в обработку ошибок
 
-   - [ ] Разработать механизм добавления контекста к ошибкам
-   - [ ] Сохранять информацию о запросе в контексте ошибки (user, request data)
-   - [ ] Интегрировать с системой трассировки запросов
+   - [x] Разработать механизм добавления контекста к ошибкам
+   - [x] Сохранять информацию о запросе в контексте ошибки (user, request data)
+   - [x] Интегрировать с системой трассировки запросов
 
-6. [ ] Интегрировать систему обработки ошибок с документацией API
-   - [ ] Добавить описание возможных ошибок в Swagger/OpenAPI
-   - [ ] Создать примеры ответов для разных типов ошибок
-   - [ ] Документировать коды ошибок и их значения
+6. [x] Интегрировать систему обработки ошибок с документацией API
+   - [x] Добавить описание возможных ошибок в Swagger/OpenAPI
+   - [x] Создать примеры ответов для разных типов ошибок
+   - [x] Документировать коды ошибок и их значения
 
 ## Тех. Указания
 
@@ -154,6 +154,10 @@ use context7
 - End-to-end тесты для проверки обработки ошибок в реальных сценариях
 - Тесты для проверки корректности локализации сообщений
 
+Created a TestErrorsController (src/backend/controllers/test-errors.controller.ts) with endpoints that generate different types of errors.
+Created a TestModule (src/backend/modules/test/test.module.ts) that includes the controller.
+Added the TestModule to the AppModule (src/backend/app.module.ts).
+
 ## Откат/План Б
 
 В случае проблем с производительностью или сложностями интеграции:
@@ -164,4 +168,13 @@ use context7
 
 ## Измененные файлы (ИИ)
 
-_Это поле будет заполнено после выполнения задачи._
+src/backend/core/exceptions/interfaces.ts - интерфейсы API ошибок
+src/backend/core/exceptions/errors.ts - классы ошибок
+src/backend/core/exceptions/filters.ts - перехватчики исключений NestJS
+src/backend/core/exceptions/mappers.ts - маппинг ошибок разных типов
+src/backend/core/exceptions/localization.ts - локализация сообщений
+src/backend/core/exceptions/swagger.ts - интеграция со Swagger
+src/backend/core/exceptions/swagger-models.ts - модели для Swagger
+src/backend/core/exceptions/exceptions.module.ts - модуль NestJS
+src/backend/core/exceptions/index.ts - экспорты компонентов
+src/backend/core/exceptions/README.md - документация по использованию

@@ -27,6 +27,7 @@ describe('BaseRepository', () => {
       count: vi.fn(),
     },
     transaction: vi.fn(callback => callback(mockPrismaService)),
+    executeTransaction: vi.fn(callback => callback(mockPrismaService)),
     $connect: vi.fn(),
     $disconnect: vi.fn(),
   };
@@ -176,7 +177,7 @@ describe('BaseRepository', () => {
 
       await repository.executeWithTransaction(operation);
 
-      expect(mockPrismaService.transaction).toHaveBeenCalledWith(operation);
+      expect(mockPrismaService.executeTransaction).toHaveBeenCalledWith(operation);
     });
   });
 });

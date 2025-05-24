@@ -9,6 +9,7 @@ import { LoggerModule } from '../logger/logger.module';
 import { ConfigModule } from '../config/config.module';
 import { EventBusModule } from '../events/event-bus.module';
 import { HealthCheckModule } from '../health/health-check.module';
+import { ExceptionsModule } from '../exceptions/exceptions.module';
 
 /**
  * Глобальный модуль ядра приложения
@@ -21,6 +22,12 @@ import { HealthCheckModule } from '../health/health-check.module';
     ConfigModule.forRoot(),
     EventBusModule.forRoot(),
     HealthCheckModule.forRoot(),
+    ExceptionsModule.register({
+      localization: {
+        defaultLocale: 'ru',
+        availableLocales: ['ru', 'en'],
+      },
+    }),
   ],
   providers: [
     {
@@ -63,6 +70,12 @@ export class CoreModule {
         ConfigModule.forRoot(),
         EventBusModule.forRoot(),
         HealthCheckModule.forRoot(),
+        ExceptionsModule.register({
+          localization: {
+            defaultLocale: 'ru',
+            availableLocales: ['ru', 'en'],
+          },
+        }),
       ],
       providers: [
         {

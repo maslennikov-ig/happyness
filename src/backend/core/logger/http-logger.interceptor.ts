@@ -30,7 +30,7 @@ export class HttpLoggerInterceptor implements NestInterceptor {
     const { method, originalUrl, ip, headers, body, params, query } = request;
 
     // Генерируем уникальный идентификатор запроса для трассировки
-    const traceId = headers['x-trace-id'] || uuidv4();
+    const traceId = headers['x-trace-id'] ? String(headers['x-trace-id']) : uuidv4();
     request['traceId'] = traceId;
 
     // Получаем идентификатор пользователя, если он аутентифицирован
@@ -54,7 +54,7 @@ export class HttpLoggerInterceptor implements NestInterceptor {
     const startTime = Date.now();
 
     // Устанавливаем заголовок трассировки в ответе
-    response.setHeader('X-Trace-ID', traceId);
+    response.setHeader('X-Trace-ID', String(traceId));
 
     // Обрабатываем запрос и логируем результат
     return next.handle().pipe(
@@ -80,8 +80,8 @@ export class HttpLoggerInterceptor implements NestInterceptor {
             `Ошибка: ${method} ${originalUrl} - ${error.status || 500} (${processingTime}ms)`,
             error.stack,
             {
-              traceId,
-              userId,
+              traceId: String(traceId),
+              userId: userId ? String(userId) : undefined,
               statusCode: error.status || 500,
               processingTime,
               errorName: error.name,

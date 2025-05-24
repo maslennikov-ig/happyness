@@ -2,14 +2,12 @@ import { Injectable, Logger } from '@nestjs/common';
 import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as Joi from 'joi';
+import { z } from 'zod';
 
 /**
  * Интерфейс для валидации конфигурации
  */
-export interface ConfigValidationSchema {
-  [key: string]: Joi.Schema;
-}
+export type ConfigValidationSchema = z.ZodRawShape;
 
 /**
  * Опции для сервиса конфигурации
@@ -18,7 +16,7 @@ export interface ConfigOptions {
   envFilePath?: string | string[];
   isGlobal?: boolean;
   validationSchema?: ConfigValidationSchema;
-  validationOptions?: Joi.ValidationOptions;
+  validationOptions?: z.ParseParams;
   ignoreEnvFile?: boolean;
   ignoreEnvVars?: boolean;
   expandVariables?: boolean;
@@ -131,22 +129,33 @@ export class ConfigService {
    * Валидирует конфигурацию по схеме
    */
   private validateConfig(): void {
-    const schema = Joi.object(this.options.validationSchema);
+    try {
+      const schema = z.object(this.options.validationSchema);
 
-    const { error, value } = schema.validate(this.config, {
-      abortEarly: false,
-      allowUnknown: true,
-      ...this.options.validationOptions,
-    });
+      const result = schema.safeParse(this.config, {
+        ...this.options.validationOptions,
+      });
 
-    if (error) {
-      const errorMessage = error.details.map(detail => detail.message).join(', ');
-      this.logger.error(`Ошибка валидации конфигурации: ${errorMessage}`);
-      throw new Error(`Ошибка валидации конфигурации: ${errorMessage}`);
+      if (!result.success) {
+        const errorMessage = result.error.errors
+          .map(err => `${err.path.join('.')}: ${err.message}`)
+          .join(', ');
+        this.logger.error(`Ошибка валидации конфигурации: ${errorMessage}`);
+        throw new Error(`Ошибка валидации конфигурации: ${errorMessage}`);
+      }
+
+      // Обновляем конфигурацию валидированными значениями
+      Object.assign(this.config, result.data);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const errorMessage = error.errors
+          .map(err => `${err.path.join('.')}: ${err.message}`)
+          .join(', ');
+        this.logger.error(`Ошибка валидации конфигурации: ${errorMessage}`);
+        throw new Error(`Ошибка валидации конфигурации: ${errorMessage}`);
+      }
+      throw error;
     }
-
-    // Обновляем конфигурацию валидированными значениями
-    Object.assign(this.config, value);
   }
 
   /**

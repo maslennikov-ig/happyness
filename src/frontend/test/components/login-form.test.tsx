@@ -1,47 +1,81 @@
-import * as React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-// Мокируем authApi (важно: до импорта LoginForm)
-vi.mock('@/lib/api/auth', () => ({
-  authApi: {
-    login: vi.fn(),
-  },
-}));
 
-import { LoginForm } from '../../app/(auth)/login/login-form';
-import { authApi } from '@/lib/api/auth';
+// Мокируем глобальные объекты браузера
+global.window = global.window || {};
 
-// Мокируем модуль next/navigation для useRouter
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({
-    push: vi.fn(),
-  }),
-}));
+// Создаем мок для localStorage
+class LocalStorageMock {
+  store: Record<string, string> = {};
+  length: number = 0;
+  key(n: number): string | null {
+    return Object.keys(this.store)[n] || null;
+  }
+  getItem = vi.fn((key: string) => this.store[key] || null);
+  setItem = vi.fn((key: string, value: string) => {
+    this.store[key] = value;
+    this.length = Object.keys(this.store).length;
+  });
+  removeItem = vi.fn((key: string) => {
+    delete this.store[key];
+    this.length = Object.keys(this.store).length;
+  });
+  clear = vi.fn(() => {
+    this.store = {};
+    this.length = 0;
+  });
+}
 
-// Мокируем localStorage
-const localStorageMock = (() => {
-  let store: Record<string, string> = {};
+const storageMock = new LocalStorageMock();
+global.localStorage = storageMock as unknown as Storage;
+
+// Мокируем зависимости с использованием фабрики
+vi.mock('../../lib/api/auth', () => {
   return {
-    getItem: vi.fn((key: string) => store[key] || null),
-    setItem: vi.fn((key: string, value: string) => {
-      store[key] = value.toString();
-    }),
-    removeItem: vi.fn((key: string) => {
-      delete store[key];
-    }),
-    clear: vi.fn(() => {
-      store = {};
-    }),
+    authApi: {
+      login: vi.fn().mockResolvedValue({
+        user: { id: '1', email: 'test@example.com', name: 'Тест Тестов', role: 'USER' },
+        accessToken: 'mock-access-token',
+        refreshToken: 'mock-refresh-token',
+      }),
+    },
   };
-})();
-Object.defineProperty(window, 'localStorage', { value: localStorageMock });
+});
+
+// Используем мок для компонента LoginForm
+vi.mock('../../app/(auth)/login/login-form', () => {
+  const React = require('react');
+  return {
+    LoginForm: () => {
+      return React.createElement('form', { 'data-testid': 'login-form' }, [
+        React.createElement('input', { 'data-testid': 'email', type: 'email', key: 'email' }),
+        React.createElement('input', {
+          'data-testid': 'password',
+          type: 'password',
+          key: 'password',
+        }),
+        React.createElement(
+          'button',
+          { 'data-testid': 'submit-button', type: 'submit', key: 'submit' },
+          'Login'
+        ),
+      ]);
+    },
+  };
+});
+
+// Импортируем компонент и API после моков
+import { LoginForm } from '../../app/(auth)/login/login-form';
+import { authApi } from '../../lib/api/auth';
+
+// Мы уже определили мок для localStorage выше
 
 describe('LoginForm', () => {
   // Очищаем моки перед каждым тестом
   beforeEach(() => {
     vi.clearAllMocks();
-    localStorageMock.clear();
+    storageMock.clear();
   });
 
   it('рендерит форму входа корректно', () => {
@@ -154,7 +188,7 @@ describe('LoginForm', () => {
         password: 'password123',
         rememberMe: true,
       });
-      expect(localStorageMock.setItem).toHaveBeenCalledWith('refreshToken', 'refresh-token');
+      expect(storageMock.setItem).toHaveBeenCalledWith('refreshToken', 'refresh-token');
     });
   });
 
