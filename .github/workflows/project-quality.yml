@@ -1,0 +1,191 @@
+name: Проверка качества проекта
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+jobs:
+  project-structure:
+    name: Проверка структуры проекта
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Проверка структуры проекта
+        run: node scripts/check-project-structure.js
+
+      - name: Генерация отчета о структуре проекта
+        run: node scripts/check-project-structure.js --report
+        continue-on-error: true
+
+      - name: Upload structure report
+        uses: actions/upload-artifact@v4
+        with:
+          name: project-structure-report
+          path: reports/project-structure-report.*
+          if-no-files-found: warn
+
+  dependencies:
+    name: Проверка зависимостей
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Установка дополнительных зависимостей для отчетов
+        run: npm install --save-dev handlebars open semver chalk
+
+      - name: Анализ зависимостей
+        run: node scripts/optimize-dependencies.js --report
+
+      - name: Upload dependencies report
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependencies-report
+          path: reports/dependencies-report.*
+          if-no-files-found: warn
+
+  code-coverage:
+    name: Проверка покрытия кода тестами
+    runs-on: ubuntu-latest
+    services:
+      postgres-test:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: happyness_test
+        ports:
+          - 5434:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL_TEST: postgresql://postgres:postgres@localhost:5434/happyness_test?schema=public
+      MIN_COVERAGE_THRESHOLD: 70
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npm run prisma:generate
+
+      - name: Apply Prisma migrations to test DB
+        run: npx prisma migrate deploy --schema=prisma/schema.prisma --preview-feature --url=$DATABASE_URL_TEST
+
+      - name: Run tests with coverage
+        run: npm run test -- --coverage
+
+      - name: Check coverage thresholds
+        run: |
+          COVERAGE_PERCENT=$(cat coverage/coverage-summary.json | jq '.total.lines.pct')
+          echo "Общее покрытие кода: $COVERAGE_PERCENT%"
+
+          if (( $(echo "$COVERAGE_PERCENT < $MIN_COVERAGE_THRESHOLD" | bc -l) )); then
+            echo "Покрытие кода ниже порогового значения $MIN_COVERAGE_THRESHOLD%"
+            if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+              echo "Создание issue о недостаточном покрытии кода..."
+              gh issue create --title "Недостаточное покрытие кода: $COVERAGE_PERCENT%" \
+                --body "Обнаружено недостаточное покрытие кода тестами: $COVERAGE_PERCENT%. Требуемый минимум: $MIN_COVERAGE_THRESHOLD%. Пожалуйста, добавьте дополнительные тесты для увеличения покрытия кода." \
+                --label "coverage,tests,quality"
+            fi
+            exit 1
+          else
+            echo "Покрытие кода соответствует требованиям"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports
+          path: coverage/
+          if-no-files-found: warn
+
+  api-docs:
+    name: Проверка документации API
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Swagger CLI
+        run: npm install -g @apidevtools/swagger-cli
+
+      - name: Validate Swagger/OpenAPI documentation
+        run: swagger-cli validate src/backend/swagger.json
+
+      - name: Generate HTML documentation
+        run: |
+          npm install -g redoc-cli
+          redoc-cli bundle src/backend/swagger.json -o reports/api-docs.html
+        continue-on-error: true
+
+      - name: Upload API documentation
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-documentation
+          path: reports/api-docs.html
+          if-no-files-found: warn
+
+  create-issues:
+    name: Создание issue при обнаружении проблем
+    runs-on: ubuntu-latest
+    needs: [project-structure, dependencies, code-coverage, api-docs]
+    if: failure() && github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create issue for project quality problems
+        run: |
+          gh issue create --title "Проблемы с качеством проекта в PR #${{ github.event.pull_request.number }}" \
+            --body "В pull request #${{ github.event.pull_request.number }} обнаружены проблемы с качеством проекта. Пожалуйста, проверьте отчеты CI/CD для получения дополнительной информации." \
+            --label "quality,ci-failure"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -120,28 +120,82 @@ export class AppModule {}
 
 ### Документирование API
 
-Для каждой версии API будет создана отдельная документация с использованием Swagger:
+Для документирования API используется Swagger/OpenAPI. Реализованы два подхода к документированию:
+
+1. **Динамическая генерация документации** - документация генерируется автоматически на основе декораторов в коде
+2. **Статическая документация** - используется заранее подготовленный файл `swagger.json`
+
+Реализация в `main.ts`:
 
 ```typescript
-// main.ts
-const options = new DocumentBuilder()
+// Настройка Swagger
+const config = new DocumentBuilder()
   .setTitle('Happyness API')
-  .setDescription('Happyness API documentation')
+  .setDescription('API для системы управления проектами и подрядчиками Happyness')
   .setVersion('1.0')
-  .addTag('v1')
+  .addTag('auth', 'Операции аутентификации и управления пользователями')
+  .addTag('projects', 'Операции управления проектами')
+  .addTag('contractors', 'Операции управления подрядчиками')
+  .addTag('requests', 'Операции управления запросами')
+  .addTag('users', 'Операции управления пользователями')
+  .addTag('users-legacy', 'Устаревшие операции управления пользователями')
+  .addBearerAuth({
+    type: 'http',
+    scheme: 'bearer',
+    bearerFormat: 'JWT',
+    name: 'JWT',
+    description: 'Введите JWT токен',
+    in: 'header',
+  })
+  .addCookieAuth('refresh_token', {
+    type: 'apiKey',
+    in: 'cookie',
+    name: 'refresh_token',
+    description: 'Refresh токен для обновления JWT',
+  })
+  .setContact('Happyness Team', 'https://happyness.example.com', 'dev@happyness.example.com')
+  .setExternalDoc('JSON документация', '/api/docs-json')
   .build();
 
-const document = SwaggerModule.createDocument(app, options, {
-  include: [
-    UsersModuleV1,
-    ProjectsModuleV1,
-    // другие модули v1
-  ],
+// Загрузка статической документации из файла или генерация динамически
+let document;
+if (fs.existsSync(swaggerJsonPath)) {
+  // Если файл swagger.json существует, используем его
+  document = JSON.parse(fs.readFileSync(swaggerJsonPath, 'utf8'));
+} else {
+  // Иначе генерируем документацию динамически
+  document = SwaggerModule.createDocument(app, config);
+}
+
+// Настройка основного Swagger UI
+SwaggerModule.setup('api/docs', app, document, {
+  swaggerOptions: {
+    persistAuthorization: true,
+    tagsSorter: 'alpha',
+    operationsSorter: 'alpha',
+    docExpansion: 'none',
+    filter: true,
+    deepLinking: true,
+  },
 });
+```
 
-SwaggerModule.setup('api/docs/v1', app, document);
+### Пометка устаревших API
 
-// Аналогично для v2
+Для пометки устаревших API используется параметр `deprecated: true` в декораторе `ApiOperation`:
+
+```typescript
+@ApiOperation({
+  summary: 'Получение списка всех пользователей',
+  description: 'УСТАРЕЛО: Этот метод устарел и будет удален 2026-01-01. Используйте GET /api/v1/users',
+  deprecated: true
+})
+```
+
+Также для устаревших контроллеров используется отдельный тег `users-legacy`:
+
+```typescript
+@ApiTags('users-legacy')
 ```
 
 ## Заключение

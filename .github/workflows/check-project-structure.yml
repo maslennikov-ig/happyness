@@ -1,0 +1,50 @@
+name: Проверка структуры проекта
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+jobs:
+  check-structure:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Настройка Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Установка зависимостей
+        run: npm ci
+
+      - name: Установка дополнительных зависимостей для отчетов
+        run: npm install --save-dev eslint istanbul swagger-parser handlebars open
+
+      - name: Проверка структуры проекта
+        run: node scripts/check-project-structure.js
+
+      - name: Генерация отчета о структуре проекта
+        run: node scripts/check-project-structure.js --report
+        continue-on-error: true
+
+      - name: Загрузка отчета о структуре проекта
+        uses: actions/upload-artifact@v4
+        with:
+          name: project-structure-report
+          path: reports/project-structure-report.*
+          if-no-files-found: warn
+
+      - name: Создание issue при обнаружении проблем
+        if: failure() && github.event_name == 'pull_request'
+        run: |
+          gh issue create --title "Проблемы со структурой проекта в PR #${{ github.event.pull_request.number }}" \
+            --body "В pull request #${{ github.event.pull_request.number }} обнаружены проблемы со структурой проекта. Пожалуйста, проверьте отчеты CI/CD для получения дополнительной информации." \
+            --label "structure,ci-failure"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
